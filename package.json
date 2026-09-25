@@ -1,0 +1,28 @@
+{
+  "name": "cv-scanner",
+  "version": "1.0.0",
+  "description": "AI-powered CV screener: a RAG pipeline and chat interface for querying a collection of generated CVs.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cv-screener",
+    "rag",
+    "llm",
+    "ai",
+    "chat",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.6.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.6.0",
+  "type": "module"
+}
