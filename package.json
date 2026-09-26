@@ -4,7 +4,9 @@
   "description": "AI-powered CV screener: a RAG pipeline and chat interface for querying a collection of generated CVs.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate:cvs": "tsx src/feed/index.ts",
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "keywords": [
     "cv-screener",
@@ -24,5 +26,23 @@
     }
   },
   "packageManager": "pnpm@12.6.0",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@faker-js/faker": "10.6.0",
+    "@google/generative-ai": "0.24.1",
+    "dotenv": "18.0.3",
+    "p-limit": "7.3.3",
+    "puppeteer": "25.12.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.2",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.1",
+    "vitest": "5.0.2"
+  }
 }
