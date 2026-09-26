@@ -79,6 +79,7 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Understand/change overall system shape, module boundaries, or cross-cutting decisions          | [docs/architecture.md](docs/architecture.md) | Living — iterates with the module lifecycle                        |
 | Implement any module behavior under `src/` (writing or changing code, not just config/tooling) | [docs/tdd.md](docs/tdd.md)                   | Mandatory — red-green-refactor per task; runner is Vitest |
 | Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
+| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, starting with [context/feed.md](context/feed.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 
 ## 5. Skills Registry

@@ -26,12 +26,11 @@ Concretely, the recurring steps in this codebase's functions are usually some su
 Before (steps run together, the eye can't tell where one ends and the next begins):
 
 ```ts
-async generateJson({ model, prompt, responseSchema }: GenerateJsonOptions): Promise<unknown> {
+async generateJson({ model, prompt }: GenerateJsonOptions): Promise<unknown> {
   const generativeModel = this.genAI.getGenerativeModel({
     model,
     generationConfig: {
       responseMimeType: "application/json",
-      ...(responseSchema ? { responseSchema } : {}),
     },
   });
   const result = await generativeModel.generateContent(prompt);
@@ -42,12 +41,11 @@ async generateJson({ model, prompt, responseSchema }: GenerateJsonOptions): Prom
 After (setup, action, and output are each their own visual block):
 
 ```ts
-async generateJson({ model, prompt, responseSchema }: GenerateJsonOptions): Promise<unknown> {
+async generateJson({ model, prompt }: GenerateJsonOptions): Promise<unknown> {
   const generativeModel = this.genAI.getGenerativeModel({
     model,
     generationConfig: {
       responseMimeType: "application/json",
-      ...(responseSchema ? { responseSchema } : {}),
     },
   });
 
@@ -95,7 +93,7 @@ export const slugify = (value: string): string => { ... };
 
 Whenever a function's own signature would take **more than one parameter**, take a single object
 parameter instead and destructure it, the same way `GeminiClient.generateJson` already takes
-`{ model, prompt, responseSchema }` rather than three positional arguments. This applies to every
+`{ model, prompt }` rather than two positional arguments. This applies to every
 function we define and call ourselves — production code and test helpers alike.
 
 ```ts
@@ -144,9 +142,66 @@ src/feed/naming/slug.ts           the directory is the concern; the next naming 
 src/feed/generators/fs-utils.ts   forbidden: the name does not say what the file is
 ```
 
+## No magic numbers in tests
+
+Numeric literals that encode a real limit, threshold, count, or configuration value — not
+arbitrary sample data — must be pulled into a named constant before they're used in a test's
+setup or assertions. This applies whenever the number *means* something a reader would otherwise
+have to guess or re-derive: a candidate count, a concurrency cap, a retry budget, a "spans at
+least N distinct X" threshold.
+
+- **Import it if production defines it.** When the number mirrors a value production code
+  already has a name for (`CANDIDATE_COUNT`, `MAX_ATTEMPTS`, ...), import that constant instead
+  of retyping the literal — see "Constants stay private unless another file needs them" below;
+  needing it here is exactly what earns that constant its `export`.
+- **Name it locally otherwise.** A threshold that only exists for this test's own assertion (e.g.
+  "at least 3 distinct roles") gets a local `const` near the top of the file (or the `describe`
+  block, if it's only relevant there), named for what it asserts (`MIN_DISTINCT_ROLES`), not what
+  it happens to equal.
+
+### Exceptions
+
+Arbitrary fixture/sample data carries no meaning to protect and stays as a literal:
+
+- Sample values that exist only to make a fixture realistic — a candidate's `yearsOfExperience`,
+  a phone number, a date string, an example seed passed only to make output deterministic.
+- Numbers embedded inside a string literal, such as an HTTP status code inside a mocked error
+  message (`"503 service unavailable"`).
+- Trivial `0`/`1` used positionally or as a call count that the test's own name already explains
+  (`result[0]`, `toHaveBeenCalledTimes(1)` for "called exactly once").
+
+When in doubt: if replacing the number with `SOME_NAME` would make the test easier to read, name
+it; if the number is just filler for a realistic-looking fixture, leave it.
+
+## Constants stay private unless another file needs them
+
+A constant declared inside a module (a `.ts` file) is exported only when some *other* file
+actually imports it — never speculatively, and never just because it looks like the kind of thing
+that *could* be reused later. (This is about individual TypeScript files/ES modules — every file
+is its own module in this sense — not the four architectural modules under `src/`; a constant
+private to `content.ts` follows this rule the same way a constant private to `app/` would.)
+
+- Add `export` the moment a second file needs the value, including a test file that needs the
+  same constant to avoid a magic number (see above) — that need is what justifies the export, not
+  the reverse.
+- Drop `export` the moment the last external importer goes away; don't leave a constant exported
+  "just in case" once nothing outside the file reads it anymore.
+- A value reused by two functions inside the same file still doesn't need `export` — same-file
+  reuse is not "another module."
+
+### Example
+
+```ts
+// content.ts
+export const MAX_ATTEMPTS = 3; // exported: content.test.ts asserts against it directly
+
+const TEXT_MODEL = "gemini-3.8-flash"; // private: only ever used inside this file
+```
+
 ## Status
 
 Visual block separation, arrow functions, and named parameters were applied repo-wide to the
-existing `src/` tree as of 2026-09-26. New code must follow every rule in this doc from the
-start, including directory nesting. When touching an existing file for unrelated reasons, bring
-it in line too.
+existing `src/` tree as of 2026-09-26. The magic-numbers-in-tests and private-by-default-constants
+rules above were added the same day and applied repo-wide at that point too. New code must follow
+every rule in this doc from the start, including directory nesting. When touching an existing
+file for unrelated reasons, bring it in line too.
