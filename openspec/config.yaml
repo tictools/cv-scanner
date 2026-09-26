@@ -30,6 +30,7 @@ rules:
   specs:
     - One spec per capability, kebab-case, named after the module it belongs to (e.g. feed-cv-generation)
     - Use SHALL/MUST for normative requirements; every requirement needs at least one WHEN/THEN scenario
+    - Put SHALL/MUST on the first line of the requirement text — `openspec validate` only checks that line (verified 2026-09-26)
   design:
     - Create only for cross-module changes, new external dependencies, or genuinely ambiguous technical choices
     - Every decision must list at least one alternative considered, with rationale

@@ -45,6 +45,9 @@ Current status: **early scaffolding**. No application code exists in `src/` yet.
 
 - **Runtime**: Node.js + TypeScript, ESM (`"type": "module"` in `package.json`).
 - **Package manager**: pnpm, pinned to `12.6.0`.
+- **Dependency versions**: always pinned exactly — no `^`/`~` ranges in `package.json`.
+  Enforced by `save-exact=true` in `.npmrc`, so `pnpm add <pkg>` writes the exact version by
+  default; if a range slips in via manual editing, pin the resolved version before committing.
 - **LLM provider**: Gemini (Google AI Studio, free tier) — single provider for both text and
   image generation, to minimize integration friction. Any provider swap should stay isolated
   behind a thin client wrapper.
@@ -85,6 +88,7 @@ Working Agreements below), register it here.
 | `vercel-react-best-practices`     | Writing, reviewing, or refactoring React/Next.js code for performance patterns                    | [.agents/skills/vercel-react-best-practices/SKILL.md](.agents/skills/vercel-react-best-practices/SKILL.md) |
 | `vercel-composition-patterns`     | Refactoring components with boolean-prop proliferation, or designing flexible/reusable component APIs | [.agents/skills/vercel-composition-patterns/SKILL.md](.agents/skills/vercel-composition-patterns/SKILL.md) |
 | `web-design-guidelines`          | Reviewing UI code for accessibility, design, or UX best-practice compliance                        | [.agents/skills/web-design-guidelines/SKILL.md](.agents/skills/web-design-guidelines/SKILL.md) |
+| `git-workflow`                    | Creating a new branch, opening a PR, or handling a `git push` that's out of sync/conflicting        | [.agents/skills/git-workflow/SKILL.md](.agents/skills/git-workflow/SKILL.md)               |
 |                                  |                                                                                                    |                                                                                             |
 
 ## 6. Working Agreements
