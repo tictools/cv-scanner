@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@feed/*": ["./src/feed/*"],
+      "@rag/*": ["./src/rag/*"],
+      "@agent/*": ["./src/agent/*"],
+      "@app/*": ["./src/app/*"],
+      "@data/*": ["./data/*"]
+    }
+  },
+  "include": ["src", "vitest.config.ts"]
+}

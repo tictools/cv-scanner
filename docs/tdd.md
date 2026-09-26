@@ -28,13 +28,15 @@ single "implement X" line — the spec describes *what*, TDD governs *how* it ge
 that can't be phrased that way (e.g. a pure config/tooling change) isn't module behavior and
 falls under the same exception already carved out for OpenSpec itself.
 
-## Open item: test framework
+## Test framework: Vitest
 
-No test runner is installed yet — `package.json`'s `test` script is still the placeholder from
-scaffolding. Picking one (e.g. Vitest, given the Node + TypeScript + ESM stack) is an open
-decision for whichever module is implemented first; update this section once it's chosen so the
-next module reuses it instead of re-deciding. The mandatory-TDD rule holds regardless of which
-runner ends up in `package.json`.
+Chosen when implementing `feed` (the first module built): first-class TypeScript + ESM support,
+jest-like API, fast watch mode for the red-green loop. Rejected `node:test` (needs a TS
+loader/transpile step, more mocking boilerplate) and Jest (heavier, historically clunky ESM
+support) — see `openspec/changes/add-cv-generation/design.md` decision 10 for the full rationale.
+Run it with `pnpm test` (`vitest run`); `vitest.config.ts` resolves the same `@feed/*`-style path
+aliases declared in `tsconfig.json` (per `docs/architecture.md` §3), so the next module reuses
+this setup instead of re-deciding it.
 
 ## Exceptions
 

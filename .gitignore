@@ -1,4 +1,5 @@
 node_modules/
 plans/
+data/
 .env
 .DS_Store

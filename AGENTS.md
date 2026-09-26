@@ -26,7 +26,8 @@ collection of fake CVs (résumés), structured as four modules under `src/`:
 See [docs/architecture.md](docs/architecture.md) for the full system design (data flow, module
 boundaries, open questions).
 
-Current status: **early scaffolding**. No application code exists in `src/` yet.
+Current status: `feed` module implemented (CV generation pipeline); `rag`, `agent`, `app` not
+started yet.
 
 ## 2. Getting Started
 
@@ -37,9 +38,10 @@ Current status: **early scaffolding**. No application code exists in `src/` yet.
   commit it). Currently required:
   - `GEMINI_API_KEY` — Google AI Studio key, used for both text and image generation in the
     `feed` module.
-- **Run**: no build/dev/run scripts are implemented yet. `package.json` only has a placeholder
-  `pnpm test`. Scripts (e.g. `generate:cvs`) will be added as each module is implemented — see
-  the Documentation Map below for the design of each one before adding code.
+- **Run**: `pnpm generate:cvs` runs the `feed` module's CV generation pipeline (requires
+  `GEMINI_API_KEY`); `pnpm lint` runs ESLint; `pnpm test` runs the unit suite (Vitest). Scripts
+  for `rag`/`agent`/`app` will be added as those modules are implemented — see the Documentation
+  Map below for the design of each one before adding code.
 
 ## 3. Tech Stack
 
@@ -51,7 +53,16 @@ Current status: **early scaffolding**. No application code exists in `src/` yet.
 - **LLM provider**: Gemini (Google AI Studio, free tier) — single provider for both text and
   image generation, to minimize integration friction. Any provider swap should stay isolated
   behind a thin client wrapper.
-- **CV generation** (planned, not yet installed): `zod` (schema validation), `@faker-js/faker`
+- **Test runner**: Vitest (`pnpm test`) — chosen when implementing `feed`, first module to reach
+  this decision point (see `docs/tdd.md`); `tsx` runs TS ESM with resolved path aliases for the
+  `generate:cvs` script.
+- **Linting**: ESLint (`pnpm lint`), flat config in `eslint.config.js` — `@eslint/js` recommended
+  rules plus `typescript-eslint` recommended rules. `@typescript-eslint/no-unused-vars` sets
+  `ignoreRestSiblings: true` to allow the repo's destructure-to-omit-a-key test pattern (e.g.
+  `const { summary: _omitted, ...rest } = value`) without disabling the rule elsewhere.
+- **CI**: GitHub Actions, [.github/workflows/ci.yml](.github/workflows/ci.yml) — runs `pnpm lint`
+  and `pnpm test` on every push to `main` and on every pull request.
+- **CV generation** (installed, used by `feed`): `zod` (schema validation), `@faker-js/faker`
   (deterministic metadata), `puppeteer` (HTML → PDF rendering), `p-limit` (LLM call
   concurrency), `@google/generative-ai` (Gemini SDK), `dotenv`.
 - **RAG pipeline & frontend**: not yet decided. Update this section and the Documentation Map
@@ -66,8 +77,9 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Task / Case                                                                                    | Read                                         | Status                                                             |
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
 | Understand/change overall system shape, module boundaries, or cross-cutting decisions          | [docs/architecture.md](docs/architecture.md) | Living — iterates with the module lifecycle                        |
-| Implement any module behavior under `src/` (writing or changing code, not just config/tooling) | [docs/tdd.md](docs/tdd.md)                   | Mandatory — red-green-refactor per task, test framework still open |
-|                                                                                                |                                              |                                                                    |
+| Implement any module behavior under `src/` (writing or changing code, not just config/tooling) | [docs/tdd.md](docs/tdd.md)                   | Mandatory — red-green-refactor per task; runner is Vitest |
+| Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
+| Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 
 ## 5. Skills Registry
 
