@@ -35,27 +35,47 @@ deployment target.
 
 ## Decisions
 
-### Decision 1 — Vector store: Upstash Vector with hosted embeddings
+### Decision 1 — Vector store: Upstash Vector with OpenAI-hosted embeddings
 
-Use `@upstash/vector` (pin `1.2.3`) against an index created with a built-in embedding model, so
-`upsert` takes `data: string` and `query` takes `data: string` — the service embeds both sides. We
-never call an embedding API ourselves and never store a float array.
+Use `@upstash/vector` (pin `1.2.3`) against an index created with a hosted embedding model, so
+`upsert` takes `data: string` and `query` takes `data: string` — the service embeds both sides, and
+`rag` never computes or stores a float array itself.
+
+*Correction during implementation (task 1.3):* the design originally assumed Upstash's console
+still offered its own natively-hosted, free embedding models (e.g. `bge-m3`) — the same assumption
+`docs/architecture.md` §4 had floated. It doesn't. At index-creation time the console only offers
+two choices under "Embedding Model": **`Custom`** (bring-your-own vectors — no server-side
+embedding at all) and **`openai/text-embedding-3-small`** (Upstash calls OpenAI on the caller's
+behalf). This decision is rewritten against that reality.
 
 *Alternatives considered:*
 
 - **In-memory array + cosine similarity**, which `docs/architecture.md` §4 floated as "likely
   sufficient for ~30 documents". Rejected: it only looks cheaper. It still needs an embedding
-  provider (Gemini's embedding endpoint, another API surface and another failure mode), plus our
-  own similarity code, our own persistence format, and a re-embed on every process start. Upstash
-  collapses embedding + storage + search into one dependency with a free tier.
+  provider (another API surface and another failure mode), plus our own similarity code, our own
+  persistence format, and a re-embed on every process start. Upstash collapses storage + search
+  into one dependency even with the embedding step now depending on OpenAI.
 - **Gemini embeddings + a local store.** Rejected for the same reason, and it would make `rag`
   depend on the same provider `feed` uses for an unrelated purpose, coupling two modules to one
   key for no benefit.
 - **pgvector / Chroma / Qdrant.** Rejected: all require running a server or container, breaking
   the "`pnpm install` + `.env`" constraint.
+- **`Custom` (bring-your-own vectors).** Rejected: it would put `rag` right back to calling an
+  embedding API and computing vectors itself — exactly what this decision exists to avoid. It
+  would also reopen the "which embedding provider" question this decision is meant to close.
 
-*Trade-off accepted:* the embedding model is chosen once, at index-creation time in the Upstash
-console, and is not visible in this repo. Documented in `AGENTS.md` as part of the env setup.
+*Chosen:* `openai/text-embedding-3-small`. Upstash performs the embedding call, but requires the
+caller to supply an OpenAI API key alongside the request rather than storing one server-side per
+index — so `rag` now holds **three** runtime secrets instead of two: `UPSTASH_VECTOR_REST_URL`,
+`UPSTASH_VECTOR_REST_TOKEN`, and `OPENAI_API_KEY`. `OPENAI_API_KEY` lives in `rag`'s own `.env`
+entry (not `feed`'s `GEMINI_API_KEY`), since it authenticates a different provider for a different
+purpose.
+
+*Trade-off accepted:* the embedding step is no longer free or invisible to this repo — it's a
+metered OpenAI call (negligible cost for 25 short CVs, but real, and requires an OpenAI account
+with billing enabled) gated behind a credential we manage. This is a step back from the original
+"embedding model chosen once in the console, no cost, no extra key" framing, but still avoids
+running embedding/similarity code ourselves, which was the actual goal.
 
 ### Decision 2 — One vector per CV, no chunking
 
@@ -215,6 +235,11 @@ no answers until `agent` exists. Revisit then.
   and a model change on Upstash's side would silently alter ranking. → The index is disposable and
   rebuilt by one command, so recovery is `pnpm ingest:cvs`. Decision 1's trade-off is documented in
   `AGENTS.md` so the next reader doesn't hunt for embedding code that doesn't exist.
+- **A third external dependency and a real (if tiny) per-call cost**, introduced by Decision 1's
+  correction: ingestion and every query now depend on OpenAI's availability and billing, not just
+  Upstash's. → Scoped to 25 documents and a handful of queries, cost stays negligible; if OpenAI
+  becomes unavailable or the key is missing, `requireUpstashCredentials`-style env validation fails
+  fast with a named error rather than a confusing Upstash-side failure.
 - **Free-tier limits** (request rate, vector count). → 25 vectors and a handful of queries per
   session is far inside the tier; the risk only appears if the dataset grows an order of magnitude.
 - **Multilingual corpus.** The CVs are deliberately mixed-language (Spanish, Catalan, English —
@@ -229,14 +254,18 @@ no answers until `agent` exists. Revisit then.
 ## Migration Plan
 
 Additive only — no existing behavior changes, nothing to roll back in code. Setup steps: create an
-Upstash Vector index with a multilingual embedding model, put the two REST vars in `.env`, run
-`pnpm ingest:cvs`. Rollback is deleting the index; `feed`, the dataset, and `pnpm test` are
-unaffected either way.
+Upstash Vector index with the `openai/text-embedding-3-small` embedding model, create an OpenAI API
+key, put all three vars (`UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_REST_TOKEN`, `OPENAI_API_KEY`)
+in `.env`, run `pnpm ingest:cvs`. Rollback is deleting the index; `feed`, the dataset, and
+`pnpm test` are unaffected either way.
 
 ## Open Questions
 
-- Which specific Upstash embedding model to select at index creation (must be multilingual per the
-  risk above) — a console choice, made during implementation, then recorded in `AGENTS.md`.
+- ~~Which specific Upstash embedding model to select at index creation~~ — resolved during task
+  1.3: only `Custom` and `openai/text-embedding-3-small` are offered; see Decision 1's correction.
+  Its multilingual quality (Spanish/Catalan/English) isn't guaranteed the way a model explicitly
+  marketed as multilingual would be — Decision 9's cross-language integration test is the guardrail
+  that catches a bad fit here.
 - Default `topK` value. Starting at 5 and tuning against the integration test; `agent` may want a
   different default once it exists, which is why it's a caller-supplied option rather than a
   constant baked into retrieval.

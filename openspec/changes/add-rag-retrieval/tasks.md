@@ -9,16 +9,21 @@ first, then the minimum code that passes it. Layout follows design.md Decision 8
       honours `save-exact=true`; verify no `^`/`~` landed in `package.json`).
 - [ ] 1.2 Add the `ingest:cvs` script to `package.json` (`tsx src/rag/index.ts`), mirroring how
       `generate:cvs` runs `feed`.
-- [ ] 1.3 Create an Upstash Vector index with a **multilingual** embedding model (design.md risk:
-      the corpus mixes Spanish, Catalan and English); record the chosen model name so task 7.1 can
-      document it, and put `UPSTASH_VECTOR_REST_URL` / `UPSTASH_VECTOR_REST_TOKEN` in `.env`.
+- [x] 1.3 Create an Upstash Vector index. The console only offers `Custom` (bring-your-own vectors)
+      or `openai/text-embedding-3-small` as embedding models (design.md Decision 1's correction —
+      no native multilingual hosted model is available); chose `openai/text-embedding-3-small`.
+      Requires an OpenAI API key (billing-enabled OpenAI account) supplied by the caller, not
+      stored server-side. `UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_REST_TOKEN`, and
+      `OPENAI_API_KEY` are in `.env`.
 
 ## 2. Environment contract (module: rag)
 
 - [ ] 2.1 Red: `env/upstash-credentials.test.ts` — asserts a missing variable and a
-      whitespace-only variable each throw an error naming that variable.
+      whitespace-only variable each throw an error naming that variable, for all three vars
+      (`UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_REST_TOKEN`, `OPENAI_API_KEY` — see design.md
+      Decision 1's correction).
 - [ ] 2.2 Green: `env/upstash-credentials.ts` — `requireUpstashCredentials(env)` returning
-      `{ url, token }`, mirroring `feed/env/gemini-api-key.ts`.
+      `{ url, token, openaiApiKey }`, mirroring `feed/env/gemini-api-key.ts`.
 
 ## 3. Dataset paths and manifest reading (module: rag)
 
@@ -45,9 +50,12 @@ first, then the minimum code that passes it. Layout follows design.md Decision 8
 ## 5. Vector store wrapper (module: rag)
 
 - [ ] 5.1 Red: `store/vector-index.test.ts` — asserts the wrapper builds the index from the
-      credentials contract and exposes only `reset`, `upsert` and `query`.
+      credentials contract (including `openaiApiKey`) and exposes only `reset`, `upsert` and
+      `query`.
 - [ ] 5.2 Green: `store/vector-index.ts` — the only file importing `@upstash/vector`; text goes in
-      as `data`, the store owns embedding (design.md Decision 1).
+      as `data`, Upstash owns the embedding call but is passed the caller's `openaiApiKey` per
+      design.md Decision 1's correction (`openai/text-embedding-3-small`, not a native hosted
+      model).
 
 ## 6. Ingestion and retrieval (module: rag)
 
@@ -73,9 +81,10 @@ first, then the minimum code that passes it. Layout follows design.md Decision 8
 - [ ] 7.3 Update `docs/architecture.md` §4: move the RAG open questions (extraction library,
       chunking, embeddings/vector store, retrieval strategy, chunk shape) to decided, pointing at
       this change's design.md.
-- [ ] 7.4 Update `AGENTS.md` §2 (the two `UPSTASH_VECTOR_*` variables, the index's embedding model
-      from task 1.3, the `ingest:cvs` script), §3 (`rag` dependencies), §1 (module status), and add
-      the `rag` row to the §4 Documentation Map.
+- [ ] 7.4 Update `AGENTS.md` §2 (the two `UPSTASH_VECTOR_*` variables plus `OPENAI_API_KEY`, the
+      index's embedding model from task 1.3 — `openai/text-embedding-3-small` — the `ingest:cvs`
+      script), §3 (`rag` dependencies), §1 (module status), and add the `rag` row to the §4
+      Documentation Map.
 - [ ] 7.5 Write `context/rag.md` — the as-built reference for the module, matching `context/feed.md`
       (Mermaid data flow, file-by-file walkthrough).
 - [ ] 7.6 Final: verify `AGENTS.md`/`docs/` still match reality, and run `pnpm lint` and
