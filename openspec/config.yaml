@@ -1,0 +1,40 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Project: cv-scanner — AI-powered CV screener chat app (see CHALLENGE.md).
+  Four modules under src/: feed (fake CV PDF generation), rag (ingestion +
+  retrieval/vector search), agent (LLM orchestration + sources), app (chat UI).
+
+  Tech stack: Node.js + TypeScript, ESM ("type": "module"), pnpm pinned to
+  12.6.0 via packageManager. LLM provider: Gemini (Google AI Studio, free tier)
+  for both text and image generation — provider-specific code stays behind a
+  thin client wrapper. Feed module deps: zod, @faker-js/faker, puppeteer,
+  p-limit, dotenv. RAG pipeline and frontend stack: not yet decided.
+
+  Canonical docs: AGENTS.md (rules + documentation map), docs/architecture.md
+  (system design, module boundaries). plans/ is gitignored scratch — design
+  decisions must be promoted into docs/ and referenced from AGENTS.md.
+  Secrets live in .env (gitignored, never commit): GEMINI_API_KEY.
+
+  Status: early scaffolding — no application code in src/ yet.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+rules:
+  proposal:
+    - Keep proposals under 300 words — focus on the why, not the how
+    - Map every capability to one module (feed, rag, agent, app) or mark it cross-cutting
+    - Always include a "Non-goals" section
+  specs:
+    - One spec per capability, kebab-case, named after the module it belongs to (e.g. feed-cv-generation)
+    - Use SHALL/MUST for normative requirements; every requirement needs at least one WHEN/THEN scenario
+  design:
+    - Create only for cross-module changes, new external dependencies, or genuinely ambiguous technical choices
+    - Every decision must list at least one alternative considered, with rationale
+    - New dependency → justify it and flag the required AGENTS.md "Tech Stack" update
+  tasks:
+    - Each task must fit in a single working session and use "- [ ]" checkbox format
+    - Order tasks by dependency and group them by module
+    - "Final task is always: verify AGENTS.md/docs still match reality and run available checks"
