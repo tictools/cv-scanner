@@ -73,6 +73,14 @@ than shared across them.
 - **Runtime**: Node.js + TypeScript, ESM, pnpm. Single package, not a monorepo — `feed`, `rag`,
   `agent`, `app` are sibling folders under `src/`, with generated artifacts under top-level
   `data/` (not under `src/`, since it's data, not code).
+- **Import path aliases**: intra-repo imports use fixed aliases rooted at each module and at the
+  data directory — `@feed/*` → `src/feed/*`, `@rag/*` → `src/rag/*`, `@agent/*` → `src/agent/*`,
+  `@app/*` → `src/app/*`, `@data/*` → `data/*` — never deep relative chains (`../../`). Declared
+  in `tsconfig.json` (`compilerOptions.paths`), which is compile-time only: the dev/test runners
+  must resolve the same aliases at runtime (Vitest via its config, a TS runner such as `tsx` for
+  scripts). Aliases don't change module coupling: cross-module imports still only happen through
+  the narrow interfaces above (e.g. `agent` importing `@rag`'s public entry point), never into a
+  sibling module's internals.
 - **No deployment target**: architecture should optimize for "runs locally with `pnpm install`
   + a `.env`", not for scaling, multi-tenancy, or hosting concerns.
 
