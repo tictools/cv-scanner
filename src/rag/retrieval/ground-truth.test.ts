@@ -1,3 +1,8 @@
+/**
+ * The only end-to-end test that validates retrieval directly from Upstash via
+ * `index.query`. Once a case has been validated it stays on `it.skip`, so the
+ * suite does not make unnecessary calls to the service.
+ */
 import "dotenv/config";
 import { describe, expect, it } from "vitest";
 import { retrieve } from "./retrieve";
@@ -26,6 +31,15 @@ describe.skipIf(!hasUpstashCredentials)(
       expect(results.map((result) => result.candidateId)).toContain(
         "floy-keebler",
       );
+    });
+
+    it.skip("returns candidateName populated on live results after re-ingestion", async () => {
+      const results = await retrieve("FastAPI", { topK: TOP_K });
+
+      expect(results.length).toBeGreaterThan(0);
+      for (const result of results) {
+        expect(result.candidateName.trim().length).toBeGreaterThan(0);
+      }
     });
   },
 );

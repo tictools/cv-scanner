@@ -6,6 +6,7 @@
   "scripts": {
     "generate:cvs": "tsx src/feed/index.ts",
     "ingest:cvs": "tsx src/rag/index.ts",
+    "dev:agent": "wrangler dev",
     "lint": "eslint .",
     "test": "vitest run"
   },
@@ -29,9 +30,13 @@
   "packageManager": "pnpm@12.6.0",
   "type": "module",
   "dependencies": {
+    "@ai-sdk/openai": "4.0.78",
+    "@cloudflare/ai-chat": "0.12.0",
     "@faker-js/faker": "10.6.0",
     "@google/generative-ai": "0.24.1",
     "@upstash/vector": "1.2.3",
+    "agents": "0.24.0",
+    "ai": "7.0.118",
     "dotenv": "18.0.3",
     "p-limit": "7.3.3",
     "puppeteer": "25.12.0",
@@ -39,6 +44,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5.20260927.1",
     "@eslint/js": "10.0.1",
     "@types/node": "26.6.2",
     "eslint": "10.11.0",
@@ -46,6 +52,7 @@
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.1",
-    "vitest": "5.0.2"
+    "vitest": "5.0.2",
+    "wrangler": "4.141.0"
   }
 }

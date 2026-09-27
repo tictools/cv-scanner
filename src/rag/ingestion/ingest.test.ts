@@ -21,21 +21,21 @@ describe("ingest", () => {
 
     await ingest({
       store,
-      cvLocations: [{ candidateId: "jane-doe", pdfPath: "irrelevant.pdf" }],
+      cvLocations: [{ candidateId: "jane-doe", name: "Jane Doe", pdfPath: "irrelevant.pdf" }],
       extractText: async () => "Jane Doe CV text",
     });
 
     expect(callOrder[0]).toBe("reset");
   });
 
-  it("upserts one vector per CV location keyed by candidateId with source/candidateId/content metadata", async () => {
+  it("upserts one vector per CV location keyed by candidateId with source/candidateId/name/content metadata", async () => {
     const store = buildStore();
 
     await ingest({
       store,
       cvLocations: [
-        { candidateId: "jane-doe", pdfPath: "data/cvs/jane-doe.pdf" },
-        { candidateId: "john-smith", pdfPath: "data/cvs/john-smith.pdf" },
+        { candidateId: "jane-doe", name: "Jane Doe", pdfPath: "data/cvs/jane-doe.pdf" },
+        { candidateId: "john-smith", name: "John Smith", pdfPath: "data/cvs/john-smith.pdf" },
       ],
       extractText: async ({ pdfPath }) => `text for ${pdfPath}`,
     });
@@ -45,6 +45,7 @@ describe("ingest", () => {
       data: "text for data/cvs/jane-doe.pdf",
       metadata: {
         candidateId: "jane-doe",
+        name: "Jane Doe",
         source: "data/cvs/jane-doe.pdf",
         content: "text for data/cvs/jane-doe.pdf",
       },
@@ -54,6 +55,7 @@ describe("ingest", () => {
       data: "text for data/cvs/john-smith.pdf",
       metadata: {
         candidateId: "john-smith",
+        name: "John Smith",
         source: "data/cvs/john-smith.pdf",
         content: "text for data/cvs/john-smith.pdf",
       },
@@ -66,9 +68,13 @@ describe("ingest", () => {
     const summary = await ingest({
       store,
       cvLocations: [
-        { candidateId: "jane-doe", pdfPath: "data/cvs/jane-doe.pdf" },
-        { candidateId: "broken-candidate", pdfPath: "data/cvs/broken-candidate.pdf" },
-        { candidateId: "john-smith", pdfPath: "data/cvs/john-smith.pdf" },
+        { candidateId: "jane-doe", name: "Jane Doe", pdfPath: "data/cvs/jane-doe.pdf" },
+        {
+          candidateId: "broken-candidate",
+          name: "Broken Candidate",
+          pdfPath: "data/cvs/broken-candidate.pdf",
+        },
+        { candidateId: "john-smith", name: "John Smith", pdfPath: "data/cvs/john-smith.pdf" },
       ],
       extractText: async ({ pdfPath }) => {
         if (pdfPath.includes("broken-candidate")) {
@@ -89,8 +95,8 @@ describe("ingest", () => {
     const summary = await ingest({
       store,
       cvLocations: [
-        { candidateId: "jane-doe", pdfPath: "data/cvs/jane-doe.pdf" },
-        { candidateId: "john-smith", pdfPath: "data/cvs/john-smith.pdf" },
+        { candidateId: "jane-doe", name: "Jane Doe", pdfPath: "data/cvs/jane-doe.pdf" },
+        { candidateId: "john-smith", name: "John Smith", pdfPath: "data/cvs/john-smith.pdf" },
       ],
       extractText: async ({ pdfPath }) => `text for ${pdfPath}`,
     });

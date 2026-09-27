@@ -3,6 +3,7 @@ import type { UpstashCredentials } from "../env/upstash-credentials";
 
 export interface VectorMetadata {
   candidateId: string;
+  name: string;
   source: string;
   content: string;
 }

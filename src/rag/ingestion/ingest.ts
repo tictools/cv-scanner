@@ -22,7 +22,7 @@ export const ingest = async ({
   await store.reset();
 
   const results = await Promise.all(
-    cvLocations.map(async ({ candidateId, pdfPath }) => {
+    cvLocations.map(async ({ candidateId, name, pdfPath }) => {
       try {
         const text = await extractText({ pdfPath });
         const content = normalizeText(text);
@@ -30,7 +30,7 @@ export const ingest = async ({
         await store.upsert({
           id: candidateId,
           data: content,
-          metadata: { candidateId, source: pdfPath, content },
+          metadata: { candidateId, name, source: pdfPath, content },
         });
 
         return { candidateId, ok: true as const };

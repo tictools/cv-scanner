@@ -3,7 +3,7 @@ export interface UpstashCredentials {
   token: string;
 }
 
-const requireVar = (env: NodeJS.ProcessEnv, name: string): string => {
+const requireVar = (env: Record<string, string | undefined>, name: string): string => {
   const value = env[name]?.trim();
 
   if (!value) {
@@ -16,7 +16,7 @@ const requireVar = (env: NodeJS.ProcessEnv, name: string): string => {
 };
 
 export const requireUpstashCredentials = (
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
 ): UpstashCredentials => {
   return {
     url: requireVar(env, "UPSTASH_VECTOR_REST_URL"),

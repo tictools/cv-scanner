@@ -2,5 +2,7 @@ node_modules/
 plans/
 data/
 .env
+.env.local
 .DS_Store
 /memory
+.wrangler/

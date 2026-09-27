@@ -2,9 +2,9 @@
 
 > **Living document.** This file evolves throughout each module's lifecycle — it is not a
 > one-off snapshot. It currently sketches the system shape derived from
-> [CHALLENGE.md](../CHALLENGE.md); the `feed`, `rag`, `agent`, and `app` modules are **not yet
-> designed** — the sections below are open questions to resolve, ideally via an
-> [OpenSpec](https://github.com/Fission-AI/openspec) proposal per module (see `AGENTS.md`).
+> [CHALLENGE.md](../CHALLENGE.md); `feed`, `rag`, and `agent` are designed and implemented, `app`
+> is **not yet designed** — the remaining open questions below are to resolve via an
+> [OpenSpec](https://github.com/Fission-AI/openspec) proposal (see `AGENTS.md`).
 > Update this file as those proposals land instead of letting the design live only in chat.
 
 ## 1. What the system must do
@@ -18,6 +18,10 @@ From `CHALLENGE.md`:
 - Stack is a free choice; the task rewards a working product over rigid process, but also
   rewards clear thought process, code quality and AI literacy — so architectural decisions
   should be simple, justified, and documented (hence this file, kept up to date per module).
+- **Product behavior `CHALLENGE.md` doesn't state but the product needs**: a request the CV
+  collection cannot serve gets a polite, in-scope decline — never a general-knowledge answer,
+  and never a bare refusal. Decided and implemented as part of `agent`
+  (see [openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md) Decision 13).
 
 ## 2. High-level shape
 
@@ -44,17 +48,23 @@ feed ──writes──▶ data/ (PDFs, manifest.json)
                                               └────────── question ───────┘
 ```
 
-- **`feed`** — not designed yet. Generates fake CVs as PDFs plus a `manifest.json` ground
-  truth into `data/`.
+- **`feed`** — designed and implemented; see
+  [openspec/changes/archive/2026-09-26-add-cv-generation/design.md](../openspec/changes/archive/2026-09-26-add-cv-generation/design.md)
+  and [context/feed.md](../context/feed.md). Generates fake CVs as PDFs plus a `manifest.json`
+  ground truth into `data/`.
 - **`rag`** — designed and implemented; see
-  [openspec/changes/add-rag-retrieval/design.md](../openspec/changes/add-rag-retrieval/design.md)
+  [openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md](../openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md)
   and [context/rag.md](../context/rag.md). Owns ingestion and retrieval only: PDF text extraction
   (`unpdf`), one vector per CV (no chunking) via Upstash Vector's hosted `openai/text-embedding-3-small`
   embedding. Returns retrieved chunks, not answers.
-- **`agent`** — not designed yet. Owns the answer: takes the user's question plus `rag`'s
-  retrieved chunks, calls the LLM to produce a grounded answer, and assembles source
-  references (candidate/PDF) from the chunks used. This is where groundedness/source-indication
-  behavior lives, kept separate from raw retrieval mechanics.
+- **`agent`** — designed and implemented; see
+  [openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md) and
+  [context/agent.md](../context/agent.md). Owns the answer: a Cloudflare Worker (`ScannerAgent`
+  Durable Object, `wrangler dev` locally) whose model calls `rag`'s `retrieve` as a tool it chooses
+  to call, streams a grounded answer, and derives source references mechanically from the tool's
+  own results — never from the model's prose. Groundedness and the scope boundary are both
+  system-prompt contracts, verified against the real model as well as unit-tested against a mocked
+  one.
 - **`app`** (frontend) — not designed yet. Owns the UI (input + answer display) and calls into
   `agent`'s query interface (in-process function call vs. HTTP API — open question, see below).
 
@@ -68,10 +78,10 @@ than shared across them.
 ## 3. Cross-cutting decisions (made so far)
 
 - **LLM provider**: Gemini (Google AI Studio, free tier), single key, used for both text and
-  image generation in `feed`. Whether `rag`/`agent` reuse Gemini (e.g. for embeddings and/or the
-  answer-generation model) or introduce a second provider is an open question below — if a
-  second provider is introduced, it must stay isolated behind its own `client/` wrapper, same
-  pattern as `feed`.
+  image generation in `feed`. `rag` uses no separate embedding provider of its own (Upstash hosts
+  the embedding model). `agent` decided a **second** provider, OpenAI, for its answer-generation
+  model — see the Agent section in §4 below — isolated behind its own `clients/llm-client.ts`
+  wrapper, same pattern as `feed`'s Gemini client.
 - **Runtime**: Node.js + TypeScript, ESM, pnpm. Single package, not a monorepo — `feed`, `rag`,
   `agent`, `app` are sibling folders under `src/`, with generated artifacts under top-level
   `data/` (not under `src/`, since it's data, not code).
@@ -85,13 +95,20 @@ than shared across them.
   sibling module's internals.
 - **No deployment target**: architecture should optimize for "runs locally with `pnpm install`
   + a `.env`", not for scaling, multi-tenancy, or hosting concerns.
+  **Amended by `agent`** ([design.md](../openspec/changes/add-agent/design.md) Decision 1): `agent`
+  is a Cloudflare Worker + Durable Object, which needs a second local runtime (`wrangler dev`, via
+  Workerd) and a `wrangler.jsonc` config file. What survives is the *spirit* — no hosting account, no
+  deploy step, `wrangler deploy` untested and unused — and the *letter*, since Wrangler reads the same
+  single `.env` natively (no `.dev.vars`, see Decision 14). `OPENAI_API_KEY` moves from a console-setup
+  credential (used only once, to authorize Upstash's own embedding call) to a runtime credential the
+  Worker reads via an `env` binding.
 
 ## 4. Open questions (to resolve, ideally one OpenSpec proposal per module)
 
 ### RAG pipeline (`src/rag`) — decided
 
 Resolved by the `add-rag-retrieval` change; full rationale and alternatives considered in
-[openspec/changes/add-rag-retrieval/design.md](../openspec/changes/add-rag-retrieval/design.md)
+[openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md](../openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md)
 (as-built reference: [context/rag.md](../context/rag.md)):
 
 - **PDF text extraction**: `unpdf` (ESM-first wrapper over `pdfjs-dist`).
@@ -111,12 +128,25 @@ Resolved by the `add-rag-retrieval` change; full rationale and alternatives cons
   citation), `candidateId` the manifest join key, `content` the normalized CV text, `score` the
   raw similarity (no threshold applied inside `rag`; that's `agent`'s policy).
 
-### Agent (`src/agent`)
-- How source indication (optional requirement) is carried from retrieved chunks into the
-  final answer (chunk → source PDF/candidate mapping).
-- How groundedness is enforced (prompt constraints only, or a stricter check against retrieved
-  context before answering).
-- Whether `agent` reuses Gemini or a different model for answer generation.
+### Agent (`src/agent`) — decided
+
+Resolved by the `add-agent` change; full rationale and alternatives considered in
+[openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md)
+(as-built reference: [context/agent.md](../context/agent.md)):
+
+- **Source indication**: mechanical, not model-generated. Sources are derived from the retrieval
+  tool's own results for the turn (`extraction/extract-sources.ts`), de-duplicated by candidate and
+  sorted by score — never parsed out of the model's answer text, so a hallucinated citation is
+  structurally impossible.
+- **Groundedness enforcement**: a system-prompt contract (answer only from tool results; admit when
+  the corpus has no match; never invent a candidate), plus temporary audit logging
+  (`TODO(add-agent-evals)`) for manual review until a later change's Braintrust scorer replaces it.
+  No stricter runtime check against retrieved context was added — a second-call verifier was judged
+  not worth the added latency/cost on the request path.
+- **Answer-generation model**: OpenAI (`gpt-5.4-mini-2026-03-17`, via `@ai-sdk/openai` and the AI
+  SDK), not Gemini — the groundedness/scope instruction-following this module depends on was the
+  deciding factor, and the model choice sits behind `clients/llm-client.ts`, the one file that knows
+  the provider.
 
 ### App / frontend (`src/app`)
 - Framework choice (kept minimal — plain server-rendered page, or a small SPA).

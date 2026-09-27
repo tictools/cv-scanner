@@ -21,5 +21,6 @@
       "@data/*": ["./data/*"]
     }
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "vitest.config.ts"],
+  "exclude": ["src/agent"]
 }

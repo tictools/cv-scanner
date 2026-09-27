@@ -23,25 +23,41 @@ describe("readCvLocations", () => {
     await rm(dataDir, { recursive: true, force: true });
   });
 
-  it("reads one candidateId/pdfPath location per manifest entry", async () => {
+  it("reads one candidateId/name/pdfPath location per manifest entry", async () => {
     const manifestPath = join(dataDir, "manifest.json");
     await writeFile(
       manifestPath,
       JSON.stringify([
-        { candidateId: "nikita-crist", pdfPath: "data/cvs/nikita-crist.pdf" },
-        { candidateId: "carolina-wintheiser", pdfPath: "data/cvs/carolina-wintheiser.pdf" },
+        {
+          candidateId: "nikita-crist",
+          name: "Nikita Crist",
+          pdfPath: "data/cvs/nikita-crist.pdf",
+        },
+        {
+          candidateId: "carolina-wintheiser",
+          name: "Carolina Wintheiser",
+          pdfPath: "data/cvs/carolina-wintheiser.pdf",
+        },
       ]),
     );
 
     const locations = await readCvLocations(manifestPath);
 
     expect(locations).toEqual([
-      { candidateId: "nikita-crist", pdfPath: "data/cvs/nikita-crist.pdf" },
-      { candidateId: "carolina-wintheiser", pdfPath: "data/cvs/carolina-wintheiser.pdf" },
+      {
+        candidateId: "nikita-crist",
+        name: "Nikita Crist",
+        pdfPath: "data/cvs/nikita-crist.pdf",
+      },
+      {
+        candidateId: "carolina-wintheiser",
+        name: "Carolina Wintheiser",
+        pdfPath: "data/cvs/carolina-wintheiser.pdf",
+      },
     ]);
   });
 
-  it("keeps only candidateId and pdfPath even when the manifest has extra fields", async () => {
+  it("keeps only candidateId, name and pdfPath even when the manifest has extra fields", async () => {
     const manifestPath = join(dataDir, "manifest.json");
     await writeFile(
       manifestPath,
@@ -59,7 +75,11 @@ describe("readCvLocations", () => {
     const locations = await readCvLocations(manifestPath);
 
     expect(locations).toEqual([
-      { candidateId: "nikita-crist", pdfPath: "data/cvs/nikita-crist.pdf" },
+      {
+        candidateId: "nikita-crist",
+        name: "Nikita Crist",
+        pdfPath: "data/cvs/nikita-crist.pdf",
+      },
     ]);
   });
 });
