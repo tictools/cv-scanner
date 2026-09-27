@@ -648,8 +648,6 @@ Este documento se actualiza con nuevos componentes comunes.
 
 ## 9. Resources
 
-- Reference project: [`ddd-react-demo/src/app/ui`](https://github.com/tictools/ddd-react-demo/tree/main/src/app/ui) — estructura and patterns.
-- Reference project: [`ai-engineering-fundamentals/src/components`](https://github.com/tictools/ai-engineering-fundamentals/tree/main/src/components) — feature-based organization (contraste).
 - Atomic Design (Brad Frost): https://atomicdesign.bradfrost.com/
 - React Best Practices: `vercel-react-best-practices` skill.
 
