@@ -22,5 +22,5 @@
     }
   },
   "include": ["src", "vitest.config.ts"],
-  "exclude": ["src/agent"]
+  "exclude": ["src/agent", "src/app"]
 }

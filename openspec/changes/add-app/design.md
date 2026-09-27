@@ -213,25 +213,37 @@ served — the same reason `add-agent` Decision 8 left URL construction to the c
   carries `source`, and `docs/architecture.md` §2 keeps the manifest a test aid, not a runtime
   dependency.
 
-### Decision 8 — The source panel shows the latest answered turn; badges stay inline per message
+### Decision 8 — The source panel is the only place cited CVs appear, as a vertical list of portrait + name
 
-Two renderings of the same derivation, for two jobs: a `SourceBadge` under each assistant message
-answers "where did *this* claim come from", while `SourcePanel` gives the current answer's candidates
-room for a name and a visible link to the PDF.
+One rendering of the derivation, in one place. `SourcePanel` lists the latest answered turn's candidates
+one per row; `SourceEntry` (renamed from `SourceBadge`, since it is no longer a lone pill) composes an
+`Avatar` showing that candidate's CV portrait next to the name, which remains the link that opens the
+PDF. The conversation itself carries no source entries.
+
+*Revised* — the original decision rendered the same badges twice, inline under each assistant message
+*and* in the panel. In practice the inline row competed with the answer for attention and repeated, per
+message, exactly what the panel already showed for the turn being read; `ChatMessage` no longer calls
+`sourcesFromMessage` at all. The panel keeps the whole job, and gets the portrait as compensation for
+losing the second surface: a face is recognisable at a glance in a way a name pill is not.
 
 *Alternatives considered:*
 
-- **Inline badges only.** Fewer components. Rejected: the panel is what makes "which CVs were used"
-  legible at a glance, which is the optional-but-scored requirement in `CHALLENGE.md`.
+- **Inline entries only, no panel.** Rejected: the panel is what makes "which CVs were used" legible at
+  a glance, which is the optional-but-scored requirement in `CHALLENGE.md`.
 - **A panel accumulating every source in the conversation.** Rejected: it grows without bound and
   stops answering "which CVs support the answer I'm reading", which is the question it exists for.
+- **Keeping both surfaces, with the inline one collapsed behind a disclosure.** Rejected: a third
+  interaction to maintain for content one column away, already visible.
+- **The whole row as one link.** Rejected: a link wrapping a portrait, a name, and eventual metadata has
+  no honest accessible name; keeping the name as the sole link keeps the target obvious.
 
 ### Decision 9 — Messages render part-by-part, including the tool call as visible progress
 
-`ChatMessage` iterates `message.parts`: `text` parts render as text, and a `tool-scan-cv` part renders
-as a retrieval indicator whose label follows the part's state (`getToolPartState`: searching →
-finished). The model's decision to search is therefore visible in the UI, which is the behavior
-`add-agent` Decision 4 chose a tool for in the first place.
+`ChatMessage` iterates `message.parts`: `text` parts render as text — through `Markdown` for the
+assistant, literally through `Text` for the user (Decision 16) — and a `tool-scan-cv` part renders as a
+retrieval indicator whose label follows the part's state (`getToolPartState`: searching → finished). The
+model's decision to search is therefore visible in the UI, which is the behavior `add-agent` Decision 4
+chose a tool for in the first place.
 
 *Alternatives considered:*
 
@@ -320,10 +332,11 @@ src/app/
 ├── hooks/useScannerChat.ts     the only importer of the agents SDK
 ├── sources/
 │   ├── message-sources.ts      UIMessage parts → SourceReference[] (reuses @agent)
-│   └── pdf-url.ts              source path → dev-server URL
+│   ├── pdf-url.ts              source path → dev-server URL
+│   └── photo-url.ts            candidate id → portrait URL (Decision 17)
 ├── pages/ChatPage/
-├── ui/atoms/{Button,Input,Text,Heading,Badge,Spinner,Container}/
-├── ui/molecules/{ChatMessage,SearchBar,SourceBadge,ErrorBanner,RetrievalStatus}/
+├── ui/atoms/{Button,Input,Text,Heading,Badge,Spinner,Container,Link,Avatar,Markdown}/
+├── ui/molecules/{ChatMessage,SearchBar,SourceEntry,ErrorBanner,RetrievalStatus}/
 └── ui/organisms/{ChatPanel,SourcePanel}/
 ```
 
@@ -356,6 +369,84 @@ checkable (an ESLint `no-restricted-syntax` selector on lowercase `JSXOpeningEle
   `React.Fragment`), and this PR is already the largest of the three.
 - **`eslint-plugin-react-hooks`.** Deferred on the same grounds; `useScannerChat` is the only
   non-trivial hook and it is unit-tested.
+
+### Decision 15 — Messages are opposing chat bubbles, author also stated in text
+
+`ChatMessage` renders one bubble per message: the user's aligned trailing (right), the assistant's
+leading (left), each with its own fill from two new tokens in `global.css`
+(`--color-bubble-user-*`/`--color-bubble-assistant-*`) — a muted sage against a warm grey, rather than
+WhatsApp's saturated green.
+
+The palette moved with it: the page is no longer white but the darkest of three warm surfaces
+(`--color-bg` → `--color-surface` → `--color-bg-subtle`), with a desaturated slate replacing the original
+bright blue. Every foreground token was then re-checked against the *darkest* surface it can land on, not
+the lightest — which is what moved `--color-text-muted` from `#6c7076` (3.8:1 on the user bubble, a fail)
+to `#5c6066` (4.9:1), and `--color-danger` likewise. Dimming a palette silently dims its contrast; the
+bubbles are exactly where that bites, since they are the one place text sits on a non-`surface` fill.
+
+The same dimming swallowed the secondary `Button`: its `--color-bg-subtle` fill sat at 1.02:1 against the
+page, so "New conversation" read as flat text. Controls now take a lighter `--color-surface` fill and a
+new `--color-border-strong` (3.3:1 against the page, 3.8:1 against a panel) — non-text contrast, which
+WCAG 1.4.11 requires of a control's boundary, and which `--color-border` never provided once white was
+gone. The `Input` takes the same border for the same reason.
+
+The existing author label (`You`/`Assistant`) is *kept*, rendered small and muted inside the bubble.
+Alignment and fill are the fast visual channel; the label is what a screen reader, a monochrome display,
+and a colour-blind reader get instead — dropping it would put the whole author distinction on colour and
+position, which `docs/atomic-design.md`'s accessibility posture does not allow.
+
+*Alternatives considered:*
+
+- **Drop the author label, as WhatsApp does.** Rejected: WhatsApp encodes the author in the bubble tail
+  and a lifetime of habit; a screen reader gets neither, and the label costs one muted line.
+- **An `Avatar` per bubble instead of a label.** Rejected: the assistant has no portrait, and the panel
+  is where portraits carry information.
+- **`flex-direction: row-reverse` on the bubble row.** Rejected: `align-self` on the bubble expresses
+  "this one sits on that side" without reordering anything.
+
+### Decision 16 — A hand-rolled Markdown-subset atom, no Markdown dependency
+
+Answers arrive as Markdown (`- **Name** — *role*; works with **Node.js**…`) and were being printed
+verbatim. A `Markdown` atom now renders them, backed by `parse-markdown.ts` beside it: a pure function
+producing blocks (paragraph, bulleted or numbered list) of inline nodes (text, strong, emphasis, code),
+which the atom maps to elements. Unsupported or half-streamed markup falls through as literal text, so a
+chunk cut mid-`**` degrades to visible asterisks rather than to a swallowed answer.
+
+The subset is exactly what `agent`'s system prompt produces, and no more. It is the same call the repo
+already made with `ui/classnames/classNames.ts` over `clsx`: a small, owned, tested primitive instead of
+a dependency. No `dangerouslySetInnerHTML` anywhere — the atom builds React elements, so nothing in a
+model-authored answer can inject HTML.
+
+*Alternatives considered:*
+
+- **`react-markdown`.** Full CommonMark, battle-tested. Rejected for now: ~13 transitive packages
+  (`remark`/`unified`/`mdast`) in the browser bundle for four inline rules and two block rules, plus a
+  new pinned dependency to register in `AGENTS.md` §3. Revisit the moment the agent starts emitting
+  tables, headings, or links — the atom's public shape (`<Markdown>{text}</Markdown>`) is the seam that
+  swap happens behind, and its tests carry over unchanged.
+- **`marked` + `dangerouslySetInnerHTML`.** Rejected outright: it turns model output into HTML in the
+  page. Not worth a sanitiser dependency on top.
+- **Preserving newlines with `white-space: pre-wrap` and no parsing.** Rejected: it fixes line breaks and
+  leaves every `**` and `-` visible, which is the actual complaint.
+
+### Decision 17 — The portrait URL is derived from the candidate id, like the PDF URL from its path
+
+`sources/photo-url.ts` maps a `candidateId` to `/photos/<id>.png`, mirroring `pdf-url.ts`: `feed` writes
+`data/photos/<candidate.id>.png` (`feed/generators/photos.ts`), and Vite's `publicDir` is that same
+`data/`, so the file is already served. `SourceReference` stays untouched — no `photoPath` field, no
+manifest fetch, nothing new crossing the `agent` boundary.
+
+`Avatar` handles the miss: on the image's `error` event it swaps to the candidate's initials, so a
+corpus generated before photos existed shows a placeholder, never a broken image.
+
+*Alternatives considered:*
+
+- **Add `photoPath` to `SourceReference`.** Rejected: it would push a presentation concern through
+  `rag`'s index, `agent`'s tool output, and the one narrow `@agent` import this change is allowed.
+- **Fetch `data/manifest.json` in the browser.** Rejected: a second source of truth and a request, for a
+  path the convention already determines.
+- **Embed the portrait as a data URI.** Rejected: nothing in the browser has the bytes; that is what the
+  static file is for.
 
 ## Risks / Trade-offs
 

@@ -208,8 +208,10 @@ export const Button: React.FC<ButtonProps> = ({
 
 **Ejemplos:**
 - `SearchBar` — Input + Button, maneja onChange y onClick localmente.
-- `ChatMessage` — Avatar + Text (contenido) + pequeño Heading (usuario) + Badge (fuentes).
-- `SourceBadge` — Avatar (candidato) + Text (nombre) + pequeño link (PDF).
+- `ChatMessage` — burbuja de chat: Container (alineada según el autor) + Heading (autor) + Markdown
+  (respuesta del agente) o Text (pregunta del usuario, literal). Las fuentes citadas no van aquí: son
+  del `SourcePanel`.
+- `SourceEntry` — Avatar (foto del CV del candidato) + Link con Badge (el nombre, que abre el PDF).
 - `LoadingState` — Spinner + Text ("Cargando...").
 
 **Ubicación:**
@@ -307,7 +309,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
 **Ejemplos:**
 - `ChatPanel` — lista de ChatMessage + SearchBar al fondo, gestiona historial.
-- `SourcePanel` — lista de SourceBadges, permite filtrar/ordenar.
+- `SourcePanel` — lista vertical de SourceEntry, una fila por candidato citado.
 - `MessageList` — contenedor scrollable de ChatMessages.
 
 **Ubicación:**
@@ -491,7 +493,7 @@ export interface ComponentProps {
 - **CSS Modules:** uno por componente, sin conflictos globales.
 - **BEM:** `.Button`, `.Button__text`, `.Button--primary`.
 - **No inline styles:** mantener en archivo `.module.css`.
-- **Variables CSS globales:** definir en `src/app/App.css`, reutilizar:
+- **Variables CSS globales:** definir en `src/app/styles/global.css`, reutilizar:
   ```css
   :root {
     --color-primary: #007bff;
@@ -529,75 +531,92 @@ export const Button: React.FC<ButtonProps> = (...) => ...;
 
 ## 5. Directory Structure
 
+**Corrected 2026-09-27 (`add-app`)**: no `__tests__/` tree — every file with behavior gets a
+colocated `*.test.ts(x)` right beside it, per `docs/code-conventions.md`. No `index.ts` barrel (the
+`@app/*` alias resolves paths directly) and no `App.tsx`/`App.css` (`docs/code-conventions.md`
+allows exactly one file at a module root, the entry point — `main.tsx` mounts `ChatProvider` +
+`ChatPage` directly). See [context/app.md](../context/app.md) for the as-built reference and
+[openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) Decision 13 for the full
+rationale. This is the actual, current structure:
+
 ```
 src/app/
-├── index.ts                           # export point para imports @app/*
-├── App.tsx                            # componente raíz
-├── App.css                            # estilos globales, variables CSS
-├── main.tsx                           # React entry point
-│
-├── pages/
-│   ├── ChatPage/
-│   │   ├── ChatPage.tsx
-│   │   ├── ChatPage.module.css
-│   │   └── hooks/
-│   │       └── usePageState.ts
-│   └── ...
-│
-├── ui/
-│   ├── atoms/
-│   │   ├── Button/
-│   │   │   ├── Button.tsx
-│   │   │   └── Button.module.css
-│   │   ├── Input/
-│   │   ├── Text/
-│   │   ├── Container/
-│   │   ├── Flex/
-│   │   ├── Box/
-│   │   └── ...
-│   │
-│   ├── molecules/
-│   │   ├── ChatMessage/
-│   │   │   ├── ChatMessage.tsx
-│   │   │   ├── ChatMessage.module.css
-│   │   │   ├── types.ts
-│   │   │   └── hooks/
-│   │   │       └── useChatMessageFormat.ts
-│   │   ├── SearchBar/
-│   │   └── ...
-│   │
-│   └── organisms/
-│       ├── ChatPanel/
-│       │   ├── ChatPanel.tsx
-│       │   ├── ChatPanel.module.css
-│       │   └── hooks/
-│       │       ├── useChatHistory.ts
-│       │       └── useChatScroll.ts
-│       ├── SourcePanel/
-│       └── ...
-│
-├── hooks/
-│   ├── useChatHistory.ts              # reutilizable en múltiples organisms
-│   ├── useQueryAgent.ts
-│   └── ...
+├── index.html                         # Vite entry document
+├── main.tsx                           # the module's only root file: mounts ChatProvider + ChatPage
+├── styles/
+│   └── global.css                     # reset, CSS custom properties (tokens), base typography
 │
 ├── context/
-│   ├── ChatContext.tsx                # Context API para estado global
-│   └── ChatProvider.tsx
+│   ├── chat-context.tsx               # ChatProvider + useChatSession (sessionId, localStorage)
+│   └── chat-context.test.tsx
 │
-├── types/
-│   ├── chat.ts
-│   └── index.ts
+├── hooks/
+│   ├── useScannerChat.ts              # the only file importing the agents SDK
+│   └── useScannerChat.test.ts
 │
-├── services/
-│   ├── agent-client.ts                # wrapper para importar @agent
-│   └── pdf-handler.ts                 # helpers para PDFs
+├── sources/
+│   ├── pdf-url.ts                     # source path → dev-server URL
+│   ├── pdf-url.test.ts
+│   ├── photo-url.ts                   # candidate id → portrait URL
+│   ├── photo-url.test.ts
+│   ├── message-sources.ts             # UIMessage → SourceReference[] (reuses @agent)
+│   ├── message-sources.test.ts
+│   ├── latest-answered-sources.ts     # message list → most recent answered turn's sources
+│   └── latest-answered-sources.test.ts
 │
-└── __tests__/
-    ├── hooks/
-    ├── components/
-    └── integration/
+├── pages/
+│   └── ChatPage/
+│       ├── ChatPage.tsx
+│       ├── ChatPage.module.css
+│       └── ChatPage.test.tsx
+│
+└── ui/
+    ├── classnames/
+    │   ├── classNames.ts                  # composes a className prop from strings/conditionals/arrays
+    │   └── classNames.test.ts
+    │
+    ├── atoms/
+    │   ├── Button/
+    │   │   ├── Button.tsx
+    │   │   ├── Button.module.css
+    │   │   └── Button.test.tsx
+    │   ├── Input/
+    │   ├── Text/
+    │   ├── Heading/
+    │   ├── Container/
+    │   ├── Badge/
+    │   ├── Spinner/
+    │   ├── Link/
+    │   ├── Avatar/                         # portrait + initials fallback
+    │   └── Markdown/
+    │       ├── Markdown.tsx                # blocks → elements (no dangerouslySetInnerHTML)
+    │       ├── Markdown.module.css
+    │       ├── Markdown.test.tsx
+    │       ├── parse-markdown.ts           # the subset parser, pure
+    │       └── parse-markdown.test.ts
+    │
+    ├── molecules/
+    │   ├── ChatMessage/
+    │   │   ├── ChatMessage.tsx
+    │   │   ├── ChatMessage.module.css
+    │   │   └── ChatMessage.test.tsx
+    │   ├── SearchBar/
+    │   ├── SourceEntry/
+    │   ├── RetrievalStatus/
+    │   └── ErrorBanner/
+    │
+    └── organisms/
+        ├── ChatPanel/
+        │   ├── ChatPanel.tsx
+        │   ├── ChatPanel.module.css
+        │   └── ChatPanel.test.tsx
+        └── SourcePanel/
 ```
+
+No `services/` (a per-concern `sources/` directory replaced it), no `types/` (each type lives beside
+the code that defines it, e.g. `SourceReference` in `@agent/extraction/extract-sources`), and no
+component-local `hooks/` subfolders — the one non-trivial hook (`useScannerChat`) lives at the
+module's `hooks/` root since nothing else needs a nested one yet.
 
 ---
 

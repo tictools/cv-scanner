@@ -1,0 +1,26 @@
+.text {
+  margin: 0;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.text--normal {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+}
+
+.text--small {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.text--muted {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.text--mono {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}

@@ -1,0 +1,6 @@
+.heading {
+  margin: 0;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+}

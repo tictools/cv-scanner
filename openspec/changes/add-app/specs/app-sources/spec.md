@@ -1,7 +1,7 @@
 # Spec: app-sources
 
-App module: how a turn's cited CVs are derived from the agent's retrieval results, shown inline and in
-the source panel, and opened as the candidate's PDF.
+App module: how a turn's cited CVs are derived from the agent's retrieval results, listed in the source
+panel, and opened as the candidate's PDF.
 
 ## ADDED Requirements
 
@@ -34,26 +34,31 @@ most one entry per candidate, keeping the highest-scoring occurrence, ordered by
 - **WHEN** a turn's retrieval result reports an error instead of candidates
 - **THEN** that turn shows no cited CVs, and the answer is still displayed
 
-### Requirement: Every answer displays its cited CVs inline, identified by candidate name
+### Requirement: Cited CVs appear in the source panel only, never alongside the message
 
-The system SHALL display, with each assistant message that has cited CVs, one entry per candidate
-showing that candidate's name.
+The system SHALL present a turn's cited CVs exclusively in the source panel, and MUST NOT render any
+source entry within the conversation's messages.
+
+The conversation therefore reads as prose alone. A row of candidate entries repeated under every
+answer competed with the answer itself for attention and duplicated, message by message, what the
+panel already lists for the turn being read.
 
 #### Scenario: Answer with sources
 
 - **WHEN** an assistant message has cited CVs
-- **THEN** an entry per candidate is shown with that message, each labelled with the candidate's name
+- **THEN** that message shows no source entries, and the candidates appear in the source panel
 
 #### Scenario: Answer without sources
 
 - **WHEN** an assistant message has no retrieval results — an out-of-scope decline, a greeting, or a
   question answered without searching
-- **THEN** no source entries are shown for that message
+- **THEN** no source entries are shown anywhere for that message
 
-### Requirement: The source panel shows the cited CVs of the most recent answered turn
+### Requirement: The source panel lists the cited CVs of the most recent answered turn, one per row
 
 The system SHALL list, in a dedicated source panel, the cited CVs of the most recent assistant message
-that has any, and MUST replace that list when a later turn produces its own.
+that has any, one entry per row stacked vertically, and MUST replace that list when a later turn
+produces its own.
 
 The panel is scoped to the current answer rather than accumulating the whole conversation, so it always
 answers "which CVs support the answer I am reading".
@@ -61,7 +66,8 @@ answers "which CVs support the answer I am reading".
 #### Scenario: A turn produces sources
 
 - **WHEN** an answer with cited CVs completes
-- **THEN** the source panel lists that turn's candidates
+- **THEN** the source panel lists that turn's candidates, each on its own row, ordered from the
+  highest score down
 
 #### Scenario: A later turn produces its own sources
 
@@ -74,17 +80,37 @@ answers "which CVs support the answer I am reading".
 - **THEN** the panel shows that no CVs have been cited yet, rather than an empty area with no
   explanation
 
+### Requirement: Each source entry shows the candidate's CV portrait beside their name
+
+The system SHALL show, for every entry in the source panel, the portrait from that candidate's
+generated CV next to the candidate's name, and MUST remain legible when the portrait cannot be
+displayed.
+
+The portrait is located from the candidate's identifier, the same way the CV's PDF is, so the panel
+still consults no manifest or index.
+
+#### Scenario: Entry with an available portrait
+
+- **WHEN** a candidate's generated portrait can be displayed
+- **THEN** the entry shows that portrait beside the candidate's name
+
+#### Scenario: Portrait cannot be displayed
+
+- **WHEN** a candidate's portrait is missing or fails to load
+- **THEN** the entry still shows the candidate's name and remains activatable, with a placeholder in
+  the portrait's place rather than a broken image
+
 ### Requirement: A cited CV opens the candidate's PDF
 
-The system SHALL make every cited CV open that candidate's generated PDF, resolving the URL from the
-file path the retrieval result carries.
+The system SHALL make the candidate's name, within every source entry, open that candidate's generated
+PDF, resolving the URL from the file path the retrieval result carries.
 
 The path is repo-relative as `rag` recorded it at ingestion time; the app is the only module that turns
 it into a URL, so `agent` stays unaware of how files are served.
 
 #### Scenario: Opening a cited CV
 
-- **WHEN** the user activates a cited CV entry
+- **WHEN** the user activates the candidate's name in a source entry
 - **THEN** that candidate's PDF opens, in a new browsing context, leaving the conversation intact
 
 #### Scenario: URL derived from the retrieval result's path
@@ -101,10 +127,10 @@ it into a URL, so `agent` stays unaware of how files are served.
 
 ### Requirement: Cited CVs survive a page reload
 
-The system SHALL show each earlier answer's cited CVs after a reload, deriving them again from the
-replayed conversation rather than from any client-side store.
+The system SHALL show the replayed conversation's cited CVs after a reload, deriving them again from
+the replayed messages rather than from any client-side store.
 
 #### Scenario: Reload with earlier answers
 
 - **WHEN** the user reloads the page and the agent replays a conversation whose answers cited CVs
-- **THEN** those answers show the same cited CVs as before the reload
+- **THEN** the panel lists the same candidates for the most recent answered turn as before the reload

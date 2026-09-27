@@ -1,0 +1,18 @@
+.avatar {
+  flex: none;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  object-fit: cover;
+  background-color: var(--color-bg-subtle);
+}
+
+.avatar--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}

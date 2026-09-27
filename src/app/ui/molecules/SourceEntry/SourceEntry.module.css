@@ -1,0 +1,16 @@
+.sourceEntry {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-panel);
+}
+
+.sourceEntry:hover {
+  background-color: var(--color-bg-subtle);
+}
+
+.sourceEntry__link {
+  text-decoration: none;
+  min-width: 0;
+}

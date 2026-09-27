@@ -1,0 +1,20 @@
+.sourcePanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background-color: var(--color-surface);
+  overflow-y: auto;
+}
+
+.sourcePanel__title {
+  font-size: var(--font-size-lg);
+}
+
+.sourceList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
