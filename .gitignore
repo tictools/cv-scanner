@@ -3,3 +3,4 @@ plans/
 data/
 .env
 .DS_Store
+/memory

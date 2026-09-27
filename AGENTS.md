@@ -79,8 +79,12 @@ implemented; `agent`, `app` not started yet.
 - **RAG pipeline** (installed, used by `rag`): `unpdf` (PDF text extraction, ESM-first wrapper
   over `pdfjs-dist`), `@upstash/vector` (vector store client, the only file importing it is
   `src/rag/store/vector-index.ts`).
-- **Frontend**: not yet decided. Update this section and the Documentation Map once `app` is
-  designed.
+- **Frontend** (TBD, used by `app`): Vite + React (dev server, zero-config HMR); CSS Modules + BEM
+  for component styling; React Context API for state management (no Redux/Zustand); Atomic Design
+  hierarchy (atoms → molecules → organisms → pages) — see `docs/atomic-design.md`.
+- **Agent** (TBD, used by `agent`): OpenAI as the agent's LLM provider (decided), via the AI SDK
+  (`ai`, tools registered with `tool()`) on Cloudflare Workers + Durable Objects — design in
+  `openspec/changes/add-agent/design.md` once proposed.
 
 ## 4. Documentation Map
 
@@ -92,9 +96,11 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
 | Understand/change overall system shape, module boundaries, or cross-cutting decisions          | [docs/architecture.md](docs/architecture.md) | Living — iterates with the module lifecycle                        |
 | Implement any module behavior under `src/` (writing or changing code, not just config/tooling) | [docs/tdd.md](docs/tdd.md)                   | Mandatory — red-green-refactor per task; runner is Vitest |
+| Design/build UI components following atomic design principles                                  | [docs/atomic-design.md](docs/atomic-design.md) | Living — hierarchical component organization (atoms → molecules → organisms → pages); CSS Modules + BEM; **no raw JSX outside atoms** |
 | Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
 | Implement or change `rag` (ingestion + retrieval) module behavior | [openspec/changes/add-rag-retrieval/design.md](openspec/changes/add-rag-retrieval/design.md) and [.../specs/rag-ingestion/spec.md](openspec/changes/add-rag-retrieval/specs/rag-ingestion/spec.md) / [.../specs/rag-retrieval/spec.md](openspec/changes/add-rag-retrieval/specs/rag-retrieval/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
-| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, e.g. [context/feed.md](context/feed.md), [context/rag.md](context/rag.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
+| Implement or change `agent` (orchestration) or `app` (frontend UI) module behavior             | OpenSpec proposals under `openspec/changes/add-agent/` and `openspec/changes/add-app/` (local, untracked planning notes in `plans/phase3-agent-ui-implementation.md`) | Planning (Fase 3) — Cloudflare Workers + Durable Objects + PostgreSQL (D1) for session + history; Vite + React frontend; Atomic Design architecture; design decisions locked in; specs TBD once proposals are created |
+| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, e.g. [context/feed.md](context/feed.md), [context/rag.md](context/rag.md), [context/agent.md](context/agent.md), [context/app.md](context/app.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 
 ## 5. Skills Registry
