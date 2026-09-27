@@ -40,7 +40,7 @@ src/agent/
 │   ├── scan-cv.ts                     tool(): description + Zod inputSchema + execute
 │   └── index.ts                       the record { "scan-cv": scanCVTool }
 └── orchestration/
-    ├── system-prompt.ts               SYSTEM_PROMPT: groundedness + scope contracts
+    ├── system-prompt.ts               SYSTEM_PROMPT: groundedness + scope + language contracts
     ├── types.ts                       AgentResult, re-exports SourceReference
     ├── compaction.ts                  message-array compaction before the model call
     ├── groundedness-audit-log.ts      TODO(add-agent-evals): temporary audit logging
@@ -49,7 +49,7 @@ src/agent/
 ```
 
 Plus `extraction/extract-sources.ts` (tool results → `SourceReference[]`, a pure function). Every
-file above has a colocated `*.test.ts` except `index.ts`, `system-prompt.ts`, and `wrangler.jsonc`
+file above has a colocated `*.test.ts` except `index.ts` and `wrangler.jsonc`
 (config, no behavior of its own to unit-test).
 
 ### Internal dependency graph
@@ -144,12 +144,19 @@ them and lets `retrieve` fall back to `requireUpstashCredentials()` (reading `pr
 exist in that context).
 
 ### `orchestration/system-prompt.ts`
-`SYSTEM_PROMPT`: one constant string carrying the two permanent contracts side by side —
+`SYSTEM_PROMPT`: one constant string carrying the three permanent contracts side by side —
 **groundedness** (answer only from `scan-cv` results; admit when the corpus has no match; never
-invent a candidate) and **scope** (decline anything not about the CV collection, politely, stating
+invent a candidate), **scope** (decline anything not about the CV collection, politely, stating
 what the assistant covers instead; split a mixed request; never perform an out-of-scope task even
-framed as a hypothetical or role-play; reply in the user's language). Read by both `streamAgent` and
-`runAgent` from one place, so a prompt edit is observable from both (design.md Decision 13).
+framed as a hypothetical or role-play) and **language** (write every reply — answer, empty-corpus
+reply, decline, greeting — in the user's own language, never the retrieved CV's, since `feed` writes
+the corpus in English, Spanish, and Catalan; keep candidate, employer, and technology names as the CV
+spells them; follow a mid-conversation language switch). Read by both `streamAgent` and `runAgent`
+from one place, so a prompt edit is observable from both (design.md Decision 13).
+
+`system-prompt.test.ts` asserts the three contracts stay separate top-level sections and that the
+language rule is not nested back inside **scope** — where it had originally lived as one bullet, which
+read as governing declines only.
 
 ### `orchestration/compaction.ts`
 `compact(messages: UIMessage[])`: below `COMPACTION_THRESHOLD` (10 messages) returns the array

@@ -72,16 +72,41 @@ collection) and invites a question inside it.
   as a hypothetical, a role-play, or a test
 - **THEN** the scope boundary still holds and the request is declined politely
 
-#### Scenario: Decline is written in the user's language
-
-- **WHEN** an out-of-scope request arrives in Catalan, Spanish, or English
-- **THEN** the decline is written in that same language
-
 #### Scenario: Out-of-scope decline is distinguishable from an empty corpus
 
 - **WHEN** a user asks a genuine CV question the corpus cannot answer, such as who knows COBOL
 - **THEN** the reply says the collection contains no matching candidate — it does not treat a valid CV
   question as out of scope
+
+### Requirement: Every reply is written in the user's language
+
+The system SHALL write each reply in the language of the user's own message — a grounded answer, a
+"no matching candidate" reply, an out-of-scope decline, and a greeting alike — and MUST NOT adopt the
+language of the retrieved CV text instead, since the corpus mixes English, Spanish, and Catalan.
+
+Candidate names, employer and school names, job titles as held, and technology names are kept as the
+retrieved CV spells them, so each claim stays traceable to its source.
+
+#### Scenario: Answer mirrors a question asked in another language
+
+- **WHEN** a user asks in Catalan or Spanish which candidates know a given technology
+- **THEN** the answer is written in that same language, with its sources unchanged
+
+#### Scenario: Retrieved CV is in a different language from the question
+
+- **WHEN** the CV text the retrieval tool returns is written in a different language from the question
+- **THEN** the reply is still written in the user's language, rendering what the CV says in it, while
+  candidate, employer, and technology names keep the CV's own spelling
+
+#### Scenario: Decline is written in the user's language
+
+- **WHEN** an out-of-scope request arrives in Catalan, Spanish, or English
+- **THEN** the decline is written in that same language
+
+#### Scenario: User switches language mid-conversation
+
+- **WHEN** a user who has been writing in English sends the next message in Catalan
+- **THEN** that reply and the ones after it are in Catalan, and the earlier turns are left as they were
 
 ### Requirement: Session-scoped conversation with persisted history
 
