@@ -46,9 +46,11 @@ feed ──writes──▶ data/ (PDFs, manifest.json)
 
 - **`feed`** — not designed yet. Generates fake CVs as PDFs plus a `manifest.json` ground
   truth into `data/`.
-- **`rag`** — not designed yet. Owns ingestion and retrieval only: PDF text extraction,
-  chunking, embeddings, vector storage/similarity search. Returns retrieved chunks, not
-  answers.
+- **`rag`** — designed and implemented; see
+  [openspec/changes/add-rag-retrieval/design.md](../openspec/changes/add-rag-retrieval/design.md)
+  and [context/rag.md](../context/rag.md). Owns ingestion and retrieval only: PDF text extraction
+  (`unpdf`), one vector per CV (no chunking) via Upstash Vector's hosted `openai/text-embedding-3-small`
+  embedding. Returns retrieved chunks, not answers.
 - **`agent`** — not designed yet. Owns the answer: takes the user's question plus `rag`'s
   retrieved chunks, calls the LLM to produce a grounded answer, and assembles source
   references (candidate/PDF) from the chunks used. This is where groundedness/source-indication
@@ -86,20 +88,28 @@ than shared across them.
 
 ## 4. Open questions (to resolve, ideally one OpenSpec proposal per module)
 
-### RAG pipeline (`src/rag`)
-- PDF text extraction library (e.g. `pdf-parse`, `pdfjs-dist`, or reuse of anything already
-  pulled in by `feed`'s Puppeteer dependency).
-- Chunking strategy (per-section vs. fixed-size windows) — CVs have fairly clean structure
-  (contact/experience/education/skills), which may allow structure-aware chunking instead of
-  naive splitting.
-- Embedding model/provider and vector store (in-memory array + cosine similarity is likely
-  sufficient for ~30 documents; a dedicated vector DB is probably over-engineering for this
-  dataset size — needs an explicit decision, not a default).
-- Retrieval strategy (top-k similarity vs. also using `manifest.json`-style structured
-  filtering during development/validation only, never at answer time, to keep answers grounded
-  in the PDF text and not in the ground truth).
-- Shape of the chunk returned to `agent` (must carry enough metadata — source PDF/candidate —
-  for source indication downstream).
+### RAG pipeline (`src/rag`) — decided
+
+Resolved by the `add-rag-retrieval` change; full rationale and alternatives considered in
+[openspec/changes/add-rag-retrieval/design.md](../openspec/changes/add-rag-retrieval/design.md)
+(as-built reference: [context/rag.md](../context/rag.md)):
+
+- **PDF text extraction**: `unpdf` (ESM-first wrapper over `pdfjs-dist`).
+- **Chunking strategy**: none — one vector per CV. Measured every real generated CV at
+  138-392 words (avg 258), well inside the document-level-embedding band; chunking would
+  fragment the two facts every answer needs (name, role). Revisit if a future dataset pushes
+  any CV meaningfully past ~500 words.
+- **Embedding model/provider and vector store**: Upstash Vector, with Upstash-hosted embeddings
+  via the `openai/text-embedding-3-small` model (an OpenAI API key is entered once in the
+  Upstash console at index-creation time and stored server-side there — `rag`'s own runtime
+  credentials are just the two `UPSTASH_VECTOR_REST_*` variables). No local embedding/similarity
+  code, no separate embedding API call from `rag`'s side.
+- **Retrieval strategy**: plain top-K similarity via `retrieve(query, { topK })`; no
+  manifest-based filtering at query time — `manifest.json` is used only to enumerate ingestion
+  inputs and as ground truth for the gated integration test, never to shortcut an answer.
+- **Chunk shape**: `{ candidateId, source, content, score }` — `source` is the PDF path (for
+  citation), `candidateId` the manifest join key, `content` the normalized CV text, `score` the
+  raw similarity (no threshold applied inside `rag`; that's `agent`'s policy).
 
 ### Agent (`src/agent`)
 - How source indication (optional requirement) is carried from retrieved chunks into the

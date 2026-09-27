@@ -48,6 +48,17 @@ two choices under "Embedding Model": **`Custom`** (bring-your-own vectors — no
 embedding at all) and **`openai/text-embedding-3-small`** (Upstash calls OpenAI on the caller's
 behalf). This decision is rewritten against that reality.
 
+*Second correction during implementation (task 5, vector store wrapper):* the paragraph below
+originally claimed the OpenAI API key must be supplied by the caller on every request. Verified
+against the real index via a raw REST probe (`upsert-data` with only `{id, data}`, no key anywhere
+in the request) that this is wrong: Upstash embedded the text and it was retrievable with a real
+similarity score. The OpenAI key is entered once, in the console, at index-creation time (task
+1.3) and stored server-side on the index — exactly like the native hosted models this decision
+first assumed, just requiring an OpenAI account instead of being free. `rag`'s code never reads or
+sends an OpenAI key; `OPENAI_API_KEY` is a one-time console-setup credential, not a runtime one,
+and does not belong in `requireUpstashCredentials`. `rag` holds **two** runtime secrets, as
+originally planned: `UPSTASH_VECTOR_REST_URL` and `UPSTASH_VECTOR_REST_TOKEN`.
+
 *Alternatives considered:*
 
 - **In-memory array + cosine similarity**, which `docs/architecture.md` §4 floated as "likely
@@ -64,18 +75,19 @@ behalf). This decision is rewritten against that reality.
   embedding API and computing vectors itself — exactly what this decision exists to avoid. It
   would also reopen the "which embedding provider" question this decision is meant to close.
 
-*Chosen:* `openai/text-embedding-3-small`. Upstash performs the embedding call, but requires the
-caller to supply an OpenAI API key alongside the request rather than storing one server-side per
-index — so `rag` now holds **three** runtime secrets instead of two: `UPSTASH_VECTOR_REST_URL`,
-`UPSTASH_VECTOR_REST_TOKEN`, and `OPENAI_API_KEY`. `OPENAI_API_KEY` lives in `rag`'s own `.env`
-entry (not `feed`'s `GEMINI_API_KEY`), since it authenticates a different provider for a different
-purpose.
+*Chosen:* `openai/text-embedding-3-small`. Upstash performs the embedding call; the OpenAI key that
+authorizes it is entered once in the console at index-creation time and stored server-side on the
+index (see the second correction above) — `rag`'s own runtime credentials stay at **two**:
+`UPSTASH_VECTOR_REST_URL` and `UPSTASH_VECTOR_REST_TOKEN`. `OPENAI_API_KEY` is documented in
+`AGENTS.md` as a one-time setup credential (needed to create/recreate the index in the console),
+kept in `.env` for that purpose, but never read by `rag`'s code.
 
 *Trade-off accepted:* the embedding step is no longer free or invisible to this repo — it's a
 metered OpenAI call (negligible cost for 25 short CVs, but real, and requires an OpenAI account
-with billing enabled) gated behind a credential we manage. This is a step back from the original
-"embedding model chosen once in the console, no cost, no extra key" framing, but still avoids
-running embedding/similarity code ourselves, which was the actual goal.
+with billing enabled) gated behind a credential the console holds. This is a step back from the
+original "embedding model chosen once in the console, no cost, no extra key" framing, but still
+avoids running embedding/similarity code ourselves, which was the actual goal, and keeps `rag`'s
+own runtime credential surface unchanged at two variables.
 
 ### Decision 2 — One vector per CV, no chunking
 
@@ -235,11 +247,12 @@ no answers until `agent` exists. Revisit then.
   and a model change on Upstash's side would silently alter ranking. → The index is disposable and
   rebuilt by one command, so recovery is `pnpm ingest:cvs`. Decision 1's trade-off is documented in
   `AGENTS.md` so the next reader doesn't hunt for embedding code that doesn't exist.
-- **A third external dependency and a real (if tiny) per-call cost**, introduced by Decision 1's
-  correction: ingestion and every query now depend on OpenAI's availability and billing, not just
-  Upstash's. → Scoped to 25 documents and a handful of queries, cost stays negligible; if OpenAI
-  becomes unavailable or the key is missing, `requireUpstashCredentials`-style env validation fails
-  fast with a named error rather than a confusing Upstash-side failure.
+- **A real (if tiny) per-call cost**, introduced by Decision 1's correction: ingestion and every
+  query now depend on OpenAI's availability and billing on Upstash's side, even though `rag` itself
+  holds no OpenAI credential. → Scoped to 25 documents and a handful of queries, cost stays
+  negligible; if the console-side OpenAI key lapses or OpenAI is unavailable, Upstash's own
+  request fails and surfaces as an ordinary `UpstashError` from the store wrapper — there is no
+  `rag`-side credential to validate, since the key never leaves the console.
 - **Free-tier limits** (request rate, vector count). → 25 vectors and a handful of queries per
   session is far inside the tier; the risk only appears if the dataset grows an order of magnitude.
 - **Multilingual corpus.** The CVs are deliberately mixed-language (Spanish, Catalan, English —
@@ -254,10 +267,12 @@ no answers until `agent` exists. Revisit then.
 ## Migration Plan
 
 Additive only — no existing behavior changes, nothing to roll back in code. Setup steps: create an
-Upstash Vector index with the `openai/text-embedding-3-small` embedding model, create an OpenAI API
-key, put all three vars (`UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_REST_TOKEN`, `OPENAI_API_KEY`)
-in `.env`, run `pnpm ingest:cvs`. Rollback is deleting the index; `feed`, the dataset, and
-`pnpm test` are unaffected either way.
+Upstash Vector index with the `openai/text-embedding-3-small` embedding model, pasting an OpenAI
+API key into the console at that step (stored server-side on the index, see Decision 1's second
+correction); put `UPSTASH_VECTOR_REST_URL` and `UPSTASH_VECTOR_REST_TOKEN` in `.env` (`rag`'s only
+runtime credentials), plus `OPENAI_API_KEY` for reference if the index ever needs recreating; run
+`pnpm ingest:cvs`. Rollback is deleting the index; `feed`, the dataset, and `pnpm test` are
+unaffected either way.
 
 ## Open Questions
 
