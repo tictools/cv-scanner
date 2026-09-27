@@ -38,7 +38,7 @@ dev:agent`), and `app` (frontend chat UI — a Vite + React 19 SPA, `pnpm dev:ap
 - **Environment variables**: copy the required keys into a local `.env` file (gitignored, never
   commit it). `.env` is the **single** environment file for every runtime in this repo, including
   the `agent` Worker — Wrangler reads `.env` natively, so there is no second `.dev.vars` file and
-  none should be added (see `context/agent.md`'s Configuration section). Currently required:
+  none should be added. Currently required:
   - `GEMINI_API_KEY` — Google AI Studio key, used for both text and image generation in the
     `feed` module.
   - `UPSTASH_VECTOR_REST_URL` / `UPSTASH_VECTOR_REST_TOKEN` — `rag`'s runtime credentials for its
@@ -99,14 +99,14 @@ dev:agent`), and `app` (frontend chat UI — a Vite + React 19 SPA, `pnpm dev:ap
   `@testing-library/react@16.3.3`/`@testing-library/user-event@14.6.7`, as a second Vitest project.
   CSS Modules + BEM for component styling; React Context API for state management (no
   Redux/Zustand); Atomic Design hierarchy (atoms → molecules → organisms → pages) — see
-  `docs/atomic-design.md` and `context/app.md`.
+  `docs/atomic-design.md`.
 - **Agent** (installed, used by `agent`): OpenAI as the LLM provider, via the AI SDK
   (`ai@7.0.118`, `@ai-sdk/openai@4.0.78`, tools registered with `tool()`), on Cloudflare Workers +
   Durable Objects (`agents@0.24.0`, `@cloudflare/ai-chat@0.12.0`, dev deps `wrangler@4.141.0` and
   `@cloudflare/workers-types@5.20260927.1`). `clients/llm-client.ts` is the only file importing
   `@ai-sdk/openai`; `chat/scanner-agent.ts` is the only file importing `@cloudflare/ai-chat`. Model:
   `gpt-5.4-mini-2026-03-17` (the dated snapshot, not the floating alias). Design in
-  `openspec/changes/add-agent/design.md`; as-built reference in `context/agent.md`.
+  `openspec/changes/add-agent/design.md`; how it connects to the other modules is in `context/workflow.md`.
 
 ## 4. Documentation Map
 
@@ -122,8 +122,8 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
 | Implement or change `rag` (ingestion + retrieval) module behavior | [openspec/changes/add-rag-retrieval/design.md](openspec/changes/add-rag-retrieval/design.md) and [.../specs/rag-ingestion/spec.md](openspec/changes/add-rag-retrieval/specs/rag-ingestion/spec.md) / [.../specs/rag-retrieval/spec.md](openspec/changes/add-rag-retrieval/specs/rag-retrieval/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
 | Implement or change `agent` (orchestration) module behavior | [openspec/changes/add-agent/design.md](openspec/changes/add-agent/design.md) and [.../specs/agent-orchestration/spec.md](openspec/changes/add-agent/specs/agent-orchestration/spec.md) / [.../specs/agent-tools/spec.md](openspec/changes/add-agent/specs/agent-tools/spec.md) / [.../specs/agent-sources/spec.md](openspec/changes/add-agent/specs/agent-sources/spec.md) | Implemented — Cloudflare Worker + Durable Object (`pnpm dev:agent`), OpenAI via the AI SDK, `scan-cv` retrieval tool; path moves to `openspec/specs/` once the change is archived |
-| Implement or change `app` (frontend UI) module behavior | [openspec/changes/add-app/design.md](openspec/changes/add-app/design.md) and [.../specs/app-chat/spec.md](openspec/changes/add-app/specs/app-chat/spec.md) / [.../specs/app-sources/spec.md](openspec/changes/add-app/specs/app-sources/spec.md) | Implemented — Vite + React 19 SPA (`pnpm dev:app`), Atomic Design, `useScannerChat` wrapping `useAgent`/`useAgentChat` against the agent Worker (proxied via `vite.config.ts`), sources derived from `scan-cv`'s tool parts via a narrow `@agent/extraction/extract-sources` import; path moves to `openspec/specs/` once the change is archived |
-| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, e.g. [context/feed.md](context/feed.md), [context/rag.md](context/rag.md), [context/agent.md](context/agent.md), [context/app.md](context/app.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
+| Implement or change `app` (frontend UI) module behavior | [openspec/changes/archive/2026-09-27-add-app/design.md](openspec/changes/archive/2026-09-27-add-app/design.md) and [.../specs/app-chat/spec.md](openspec/specs/app-chat/spec.md) / [.../specs/app-sources/spec.md](openspec/specs/app-sources/spec.md) | Archived — Vite + React 19 SPA (`pnpm dev:app`), Atomic Design, `useScannerChat` wrapping `useAgent`/`useAgentChat` against the agent Worker (proxied via `vite.config.ts`), sources derived from `scan-cv`'s tool parts via a narrow `@agent/extraction/extract-sources` import |
+| See how the four modules communicate (onboarding, the workflow diagram) | [context/workflow.md](context/workflow.md) | Living — one diagram-first page. Update it when the wiring changes. File-level behavior stays in that module's OpenSpec design |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 
 ## 5. Skills Registry

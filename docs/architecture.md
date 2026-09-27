@@ -42,31 +42,31 @@ Four modules in a pipeline, each independently designed/documented and loosely c
 feed ──writes──▶ data/ (PDFs, manifest.json)
                     │
                     ▼ reads
-                  rag  ──retrieved chunks──▶ agent ──answer + sources──▶ app
+                  rag  ──retrieved CVs──▶ agent ──answer + sources──▶ app
                                               ▲                            │
                                               └────────── question ───────┘
 ```
 
+How they connect is [context/workflow.md](../context/workflow.md).
+
 - **`feed`** — designed and implemented; see
-  [openspec/changes/archive/2026-09-26-add-cv-generation/design.md](../openspec/changes/archive/2026-09-26-add-cv-generation/design.md)
-  and [context/feed.md](../context/feed.md). Generates fake CVs as PDFs plus a `manifest.json`
-  ground truth into `data/`.
+  [openspec/changes/archive/2026-09-26-add-cv-generation/design.md](../openspec/changes/archive/2026-09-26-add-cv-generation/design.md).
+  Generates fake CVs as PDFs plus a `manifest.json` ground truth into `data/`.
 - **`rag`** — designed and implemented; see
-  [openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md](../openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md)
-  and [context/rag.md](../context/rag.md). Owns ingestion and retrieval only: PDF text extraction
-  (`unpdf`), one vector per CV (no chunking) via Upstash Vector's hosted `openai/text-embedding-3-small`
-  embedding. Returns retrieved chunks, not answers.
+  [openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md](../openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md).
+  Owns ingestion and retrieval only: PDF text extraction (`unpdf`), one vector per CV (no chunking)
+  via Upstash Vector's hosted `openai/text-embedding-3-small` embedding. Returns retrieved CVs, not
+  answers.
 - **`agent`** — designed and implemented; see
-  [openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md) and
-  [context/agent.md](../context/agent.md). Owns the answer: a Cloudflare Worker (`ScannerAgent`
-  Durable Object, `wrangler dev` locally) whose model calls `rag`'s `retrieve` as a tool it chooses
-  to call, streams a grounded answer, and derives source references mechanically from the tool's
-  own results — never from the model's prose. Groundedness and the scope boundary are both
-  system-prompt contracts, verified against the real model as well as unit-tested against a mocked
-  one.
+  [openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md). Owns the answer: a
+  Cloudflare Worker (`ScannerAgent` Durable Object, `wrangler dev` locally) whose model calls `rag`'s
+  `retrieve` as a tool it chooses to call, streams a grounded answer, and derives source references
+  mechanically from the tool's own results — never from the model's prose. Groundedness and the scope
+  boundary are both system-prompt contracts, verified against the real model as well as unit-tested
+  against a mocked one.
 - **`app`** — designed and implemented; see
-  [openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) and
-  [context/app.md](../context/app.md). Owns the chat UI: a Vite + React 19 SPA that talks to
+  [openspec/changes/archive/2026-09-27-add-app/design.md](../openspec/changes/archive/2026-09-27-add-app/design.md). Owns the chat UI: a
+  Vite + React 19 SPA that talks to
   `agent`'s Worker over its existing chat protocol (`useAgent` + `useAgentChat`, proxied by Vite —
   no new HTTP API, no in-process call, since `agent` is a separate Cloudflare Worker process) and
   derives its cited-CVs display mechanically from the same tool results `agent` already streams.
@@ -79,7 +79,7 @@ interface (its chat protocol), with **one narrow, documented exception**: `app` 
 the "what counts as a cited CV" rule is defined once, not restated. That import may never reach for
 anything else in `agent` — in particular never `src/agent/index.ts` (the Worker entry), which
 would drag `agents` and the `cloudflare:` module scheme into the browser bundle
-([openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) Decision 6). This
+([openspec/changes/archive/2026-09-27-add-app/design.md](../openspec/changes/archive/2026-09-27-add-app/design.md) Decision 6). This
 keeps each module replaceable/rewriteable independently — external API access (e.g. the LLM
 provider) should stay isolated behind a thin `client/` wrapper per module rather than shared across
 them.
@@ -118,7 +118,7 @@ them.
 
 Resolved by the `add-rag-retrieval` change; full rationale and alternatives considered in
 [openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md](../openspec/changes/archive/2026-09-27-add-rag-retrieval/design.md)
-(as-built reference: [context/rag.md](../context/rag.md)):
+(how it connects: [context/workflow.md](../context/workflow.md)):
 
 - **PDF text extraction**: `unpdf` (ESM-first wrapper over `pdfjs-dist`).
 - **Chunking strategy**: none — one vector per CV. Measured every real generated CV at
@@ -141,7 +141,7 @@ Resolved by the `add-rag-retrieval` change; full rationale and alternatives cons
 
 Resolved by the `add-agent` change; full rationale and alternatives considered in
 [openspec/changes/add-agent/design.md](../openspec/changes/add-agent/design.md)
-(as-built reference: [context/agent.md](../context/agent.md)):
+(how it connects: [context/workflow.md](../context/workflow.md)):
 
 - **Source indication**: mechanical, not model-generated. Sources are derived from the retrieval
   tool's own results for the turn (`extraction/extract-sources.ts`), de-duplicated by candidate and
@@ -160,8 +160,8 @@ Resolved by the `add-agent` change; full rationale and alternatives considered i
 ### App / frontend (`src/app`) — decided
 
 Resolved by the `add-app` change; full rationale and alternatives considered in
-[openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md)
-(as-built reference: [context/app.md](../context/app.md)):
+[openspec/changes/archive/2026-09-27-add-app/design.md](../openspec/changes/archive/2026-09-27-add-app/design.md)
+(how it connects: [context/workflow.md](../context/workflow.md)):
 
 - **Framework choice**: a small SPA — Vite + React 19, no meta-framework, no router (one screen), no
   component library, no state library (`useState`/`useContext` only). React is not a free choice

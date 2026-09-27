@@ -1,8 +1,8 @@
 # app
 
 The chat UI: ask a question about the generated CVs, watch a grounded answer stream in, see which
-CVs it cited, open them as PDFs. See [context/app.md](../../context/app.md) for the full as-built
-reference.
+CVs it cited, open them as PDFs. See [context/workflow.md](../../context/workflow.md) for how this
+UI connects to the rest of the system.
 
 ## Prerequisites
 

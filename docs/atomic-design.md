@@ -535,8 +535,8 @@ export const Button: React.FC<ButtonProps> = (...) => ...;
 colocated `*.test.ts(x)` right beside it, per `docs/code-conventions.md`. No `index.ts` barrel (the
 `@app/*` alias resolves paths directly) and no `App.tsx`/`App.css` (`docs/code-conventions.md`
 allows exactly one file at a module root, the entry point — `main.tsx` mounts `ChatProvider` +
-`ChatPage` directly). See [context/app.md](../context/app.md) for the as-built reference and
-[openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) Decision 13 for the full
+`ChatPage` directly). See
+[openspec/changes/archive/2026-09-27-add-app/design.md](../openspec/changes/archive/2026-09-27-add-app/design.md) Decision 13 for the full
 rationale. This is the actual, current structure:
 
 ```
