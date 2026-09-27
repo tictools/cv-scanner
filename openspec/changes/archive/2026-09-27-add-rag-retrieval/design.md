@@ -233,7 +233,7 @@ candidate, queries for them, and asserts that candidate appears in the top-K. It
 the Upstash env vars are absent, so `pnpm test` and CI stay green without credentials — the same
 posture `feed` takes for its API-dependent tests.
 
-*Alternative considered:* an eval framework (Braintrust/autoevals, as in the reference repo).
+*Alternative considered:* an eval framework (Braintrust/autoevals).
 Rejected as premature: those scorers grade *answers* for groundedness and structure, and there are
 no answers until `agent` exists. Revisit then.
 
