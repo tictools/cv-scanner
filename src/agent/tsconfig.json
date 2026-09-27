@@ -1,0 +1,7 @@
+{
+  // Cursor loads tsconfig.json, not tsconfig.agent.json. This file is what
+  // puts @cloudflare/workers-types in scope for the editor.
+  "extends": "../../tsconfig.agent.json",
+  "include": ["./**/*.ts"],
+  "exclude": []
+}

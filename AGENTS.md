@@ -26,8 +26,9 @@ collection of fake CVs (résumés), structured as four modules under `src/`:
 See [docs/architecture.md](docs/architecture.md) for the full system design (data flow, module
 boundaries, open questions).
 
-Current status: `feed` (CV generation pipeline) and `rag` (ingestion + retrieval) modules
-implemented; `agent`, `app` not started yet.
+Current status: `feed` (CV generation pipeline), `rag` (ingestion + retrieval), and `agent`
+(orchestration — a Cloudflare Worker + Durable Object, `pnpm dev:agent`) modules implemented; `app`
+not started yet.
 
 ## 2. Getting Started
 
@@ -35,24 +36,31 @@ implemented; `agent`, `app` not started yet.
   `packageManager`/`devEngines` in `package.json` (`pnpm@12.6.0`).
 - **Install dependencies**: `pnpm install`
 - **Environment variables**: copy the required keys into a local `.env` file (gitignored, never
-  commit it). Currently required:
+  commit it). `.env` is the **single** environment file for every runtime in this repo, including
+  the `agent` Worker — Wrangler reads `.env` natively, so there is no second `.dev.vars` file and
+  none should be added (see `context/agent.md`'s Configuration section). Currently required:
   - `GEMINI_API_KEY` — Google AI Studio key, used for both text and image generation in the
     `feed` module.
   - `UPSTASH_VECTOR_REST_URL` / `UPSTASH_VECTOR_REST_TOKEN` — `rag`'s runtime credentials for its
-    Upstash Vector index (created with the `openai/text-embedding-3-small` embedding model).
-  - `OPENAI_API_KEY` — a one-time **console-setup** credential, not a runtime one: paste it into
-    the Upstash console when creating/recreating the index (it authorizes Upstash's own call to
-    OpenAI and is stored server-side there). No `rag` code reads this variable; keep it in `.env`
-    only for reference.
+    Upstash Vector index (created with the `openai/text-embedding-3-small` embedding model), read
+    from `process.env` by Node scripts/tests and from the Worker's `env` binding by `agent`.
+  - `OPENAI_API_KEY` — **two roles**: a one-time **console-setup** credential pasted into the
+    Upstash console when creating/recreating the index (authorizes Upstash's own call to OpenAI,
+    stored server-side there — no `rag` code reads this variable for that purpose), and, separately,
+    a **runtime credential** the `agent` Worker reads via its `env` binding
+    (`env/agent-env.ts`'s `requireOpenAiApiKey`) to call the OpenAI API directly for answer
+    generation. Both roles read the same `.env` value.
 - **Run**: `pnpm generate:cvs` runs the `feed` module's CV generation pipeline (requires
   `GEMINI_API_KEY`); `pnpm ingest:cvs` runs the `rag` module's ingestion pipeline — extracts every
   CV PDF's text and indexes one vector per candidate into Upstash Vector (requires
   `UPSTASH_VECTOR_REST_URL`/`UPSTASH_VECTOR_REST_TOKEN` and a populated `data/` from
-  `generate:cvs`); `pnpm lint` runs ESLint; `pnpm test` runs the unit suite (Vitest) — one
-  integration test in `rag` (`src/rag/retrieval/ground-truth.test.ts`) exercises the live Upstash
-  index and skips itself when the two Upstash variables are absent. Scripts for `agent`/`app` will
-  be added as those modules are implemented — see the Documentation Map below for the design of
-  each one before adding code.
+  `generate:cvs`); `pnpm dev:agent` runs the `agent` module's Cloudflare Worker locally via
+  `wrangler dev` (requires `OPENAI_API_KEY` and both `UPSTASH_VECTOR_REST_*` variables — every agent
+  test passes without them, since the model is injected as a parameter and mocked); `pnpm lint` runs
+  ESLint; `pnpm test` runs the unit suite (Vitest) — one integration test in `rag`
+  (`src/rag/retrieval/ground-truth.test.ts`) exercises the live Upstash index and skips itself when
+  the two Upstash variables are absent. A script for `app` will be added once that module is
+  implemented — see the Documentation Map below for its design before adding code.
 
 ## 3. Tech Stack
 
@@ -82,9 +90,13 @@ implemented; `agent`, `app` not started yet.
 - **Frontend** (TBD, used by `app`): Vite + React (dev server, zero-config HMR); CSS Modules + BEM
   for component styling; React Context API for state management (no Redux/Zustand); Atomic Design
   hierarchy (atoms → molecules → organisms → pages) — see `docs/atomic-design.md`.
-- **Agent** (TBD, used by `agent`): OpenAI as the agent's LLM provider (decided), via the AI SDK
-  (`ai`, tools registered with `tool()`) on Cloudflare Workers + Durable Objects — design in
-  `openspec/changes/add-agent/design.md` once proposed.
+- **Agent** (installed, used by `agent`): OpenAI as the LLM provider, via the AI SDK
+  (`ai@7.0.118`, `@ai-sdk/openai@4.0.78`, tools registered with `tool()`), on Cloudflare Workers +
+  Durable Objects (`agents@0.24.0`, `@cloudflare/ai-chat@0.12.0`, dev deps `wrangler@4.141.0` and
+  `@cloudflare/workers-types@5.20260927.1`). `clients/llm-client.ts` is the only file importing
+  `@ai-sdk/openai`; `chat/scanner-agent.ts` is the only file importing `@cloudflare/ai-chat`. Model:
+  `gpt-5.4-mini-2026-03-17` (the dated snapshot, not the floating alias). Design in
+  `openspec/changes/add-agent/design.md`; as-built reference in `context/agent.md`.
 
 ## 4. Documentation Map
 
@@ -99,7 +111,8 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Design/build UI components following atomic design principles                                  | [docs/atomic-design.md](docs/atomic-design.md) | Living — hierarchical component organization (atoms → molecules → organisms → pages); CSS Modules + BEM; **no raw JSX outside atoms** |
 | Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
 | Implement or change `rag` (ingestion + retrieval) module behavior | [openspec/changes/add-rag-retrieval/design.md](openspec/changes/add-rag-retrieval/design.md) and [.../specs/rag-ingestion/spec.md](openspec/changes/add-rag-retrieval/specs/rag-ingestion/spec.md) / [.../specs/rag-retrieval/spec.md](openspec/changes/add-rag-retrieval/specs/rag-retrieval/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
-| Implement or change `agent` (orchestration) or `app` (frontend UI) module behavior             | OpenSpec proposals under `openspec/changes/add-agent/` and `openspec/changes/add-app/` (local, untracked planning notes in `plans/phase3-agent-ui-implementation.md`) | Planning (Fase 3) — Cloudflare Workers + Durable Objects + PostgreSQL (D1) for session + history; Vite + React frontend; Atomic Design architecture; design decisions locked in; specs TBD once proposals are created |
+| Implement or change `agent` (orchestration) module behavior | [openspec/changes/add-agent/design.md](openspec/changes/add-agent/design.md) and [.../specs/agent-orchestration/spec.md](openspec/changes/add-agent/specs/agent-orchestration/spec.md) / [.../specs/agent-tools/spec.md](openspec/changes/add-agent/specs/agent-tools/spec.md) / [.../specs/agent-sources/spec.md](openspec/changes/add-agent/specs/agent-sources/spec.md) | Implemented — Cloudflare Worker + Durable Object (`pnpm dev:agent`), OpenAI via the AI SDK, `scan-cv` retrieval tool; path moves to `openspec/specs/` once the change is archived |
+| Implement or change `app` (frontend UI) module behavior | OpenSpec proposal under `openspec/changes/add-app/` (local, untracked planning notes in `plans/phase3-agent-ui-implementation.md`) | Planning (Fase 3) — Vite + React frontend; Atomic Design architecture; design decisions locked in; spec TBD once the proposal is created |
 | Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, e.g. [context/feed.md](context/feed.md), [context/rag.md](context/rag.md), [context/agent.md](context/agent.md), [context/app.md](context/app.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 

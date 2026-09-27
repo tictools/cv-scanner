@@ -1,4 +1,10 @@
 saveExact: true
 allowBuilds:
+  core-js-pure: true
   esbuild: true
   puppeteer: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@4.0.96'
+  - ai@7.0.118
+  - '@cloudflare/workers-types@5.20260927.1'

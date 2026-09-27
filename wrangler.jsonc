@@ -1,0 +1,13 @@
+{
+  "name": "cv-scanner-agent",
+  "main": "src/agent/index.ts",
+  "compatibility_date": "2026-09-25",
+  "durable_objects": {
+    "bindings": [
+      { "name": "ScannerAgent", "class_name": "ScannerAgent" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ScannerAgent"] }
+  ]
+}
