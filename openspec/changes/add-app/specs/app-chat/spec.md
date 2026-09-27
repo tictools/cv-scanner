@@ -72,6 +72,63 @@ the interface looks idle while the agent is working.
 - **WHEN** the assistant answers without calling the retrieval tool at all
 - **THEN** no search indication is shown for that turn
 
+### Requirement: The conversation reads as opposing chat bubbles, the user's on one side and the assistant's on the other
+
+The system SHALL render every message as a bubble that identifies its author by position and fill —
+the user's aligned to one side of the conversation, the assistant's to the other, each with its own
+background — within a restrained colour palette, and MUST keep the author identifiable to assistive
+technology rather than by colour and position alone.
+
+#### Scenario: A user message
+
+- **WHEN** the conversation contains a message the user sent
+- **THEN** it is rendered as a bubble aligned to the conversation's trailing side, filled distinctly
+  from the assistant's
+
+#### Scenario: An assistant message
+
+- **WHEN** the conversation contains a message the assistant sent
+- **THEN** it is rendered as a bubble aligned to the conversation's leading side, filled distinctly
+  from the user's
+
+#### Scenario: Author conveyed beyond colour and position
+
+- **WHEN** a message is rendered
+- **THEN** its author is also stated in the bubble as text, so the distinction does not rest on
+  alignment or fill
+
+### Requirement: An answer's text is rendered with the structure the agent wrote it in
+
+The system SHALL render the lightweight markup the assistant's answer text carries — bulleted and
+numbered lists, bold, italic, and inline code — as the corresponding formatted content, and MUST NOT
+display that markup's own characters as literal text.
+
+Answers that enumerate candidates arrive as a list with each candidate's name in bold; shown verbatim,
+the reader is left decoding `- **Name** — *role*` instead of reading it. The user's own message is
+rendered literally, since what they typed is not markup.
+
+#### Scenario: Answer listing candidates
+
+- **WHEN** an answer's text is a list of items, each carrying emphasised segments
+- **THEN** it is rendered as a list, one item per entry, with those segments emphasised and no markup
+  characters visible
+
+#### Scenario: Answer in prose
+
+- **WHEN** an answer's text is one or more plain paragraphs
+- **THEN** each paragraph is rendered as its own paragraph
+
+#### Scenario: Partial markup mid-stream
+
+- **WHEN** an answer's streamed text is cut off inside a markup sequence
+- **THEN** the text rendered so far stays readable, with the incomplete sequence left as written rather
+  than swallowing the rest of the answer
+
+#### Scenario: The user's own question
+
+- **WHEN** the user's message text contains characters that would read as markup
+- **THEN** it is displayed exactly as typed
+
 ### Requirement: The conversation is the agent's, not the client's
 
 The system SHALL render the conversation history supplied by the agent session and MUST NOT keep its
@@ -112,7 +169,14 @@ deleting it.
 #### Scenario: New conversation
 
 - **WHEN** the user starts a new conversation
-- **THEN** a new identifier is generated and stored, and the conversation area is empty
+- **THEN** a new identifier is generated and stored, and the conversation area is empty — on that one
+  action, with nothing of the previous session still on screen
+
+#### Scenario: New conversation with a half-typed question
+
+- **WHEN** the user starts a new conversation with unsent text still in the input
+- **THEN** that text is discarded along with the previous session, so nothing carries over into the new
+  conversation
 
 ### Requirement: Connection and streaming failures are reported and never leave the interface stuck
 

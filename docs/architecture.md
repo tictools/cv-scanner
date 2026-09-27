@@ -2,10 +2,9 @@
 
 > **Living document.** This file evolves throughout each module's lifecycle — it is not a
 > one-off snapshot. It currently sketches the system shape derived from
-> [CHALLENGE.md](../CHALLENGE.md); `feed`, `rag`, and `agent` are designed and implemented, `app`
-> is **not yet designed** — the remaining open questions below are to resolve via an
-> [OpenSpec](https://github.com/Fission-AI/openspec) proposal (see `AGENTS.md`).
-> Update this file as those proposals land instead of letting the design live only in chat.
+> [CHALLENGE.md](../CHALLENGE.md); `feed`, `rag`, `agent`, and `app` are all designed and
+> implemented. Update this file as future proposals land instead of letting the design live only in
+> chat.
 
 ## 1. What the system must do
 
@@ -65,15 +64,25 @@ feed ──writes──▶ data/ (PDFs, manifest.json)
   own results — never from the model's prose. Groundedness and the scope boundary are both
   system-prompt contracts, verified against the real model as well as unit-tested against a mocked
   one.
-- **`app`** (frontend) — not designed yet. Owns the UI (input + answer display) and calls into
-  `agent`'s query interface (in-process function call vs. HTTP API — open question, see below).
+- **`app`** — designed and implemented; see
+  [openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) and
+  [context/app.md](../context/app.md). Owns the chat UI: a Vite + React 19 SPA that talks to
+  `agent`'s Worker over its existing chat protocol (`useAgent` + `useAgentChat`, proxied by Vite —
+  no new HTTP API, no in-process call, since `agent` is a separate Cloudflare Worker process) and
+  derives its cited-CVs display mechanically from the same tool results `agent` already streams.
 
 The boundary between modules is **data and narrow interfaces**, not shared code: `feed` writes
 to `data/`; `rag` reads from `data/` (the manifest is a test/validation aid, not a runtime
 dependency); `agent` only calls `rag`'s retrieval interface; `app` only calls `agent`'s query
-interface. This keeps each module replaceable/rewriteable independently — external API access
-(e.g. the LLM provider) should stay isolated behind a thin `client/` wrapper per module rather
-than shared across them.
+interface (its chat protocol), with **one narrow, documented exception**: `app` also imports
+`agent`'s pure `extraction/extract-sources.ts` directly (`@agent/extraction/extract-sources`) so
+the "what counts as a cited CV" rule is defined once, not restated. That import may never reach for
+anything else in `agent` — in particular never `src/agent/index.ts` (the Worker entry), which
+would drag `agents` and the `cloudflare:` module scheme into the browser bundle
+([openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md) Decision 6). This
+keeps each module replaceable/rewriteable independently — external API access (e.g. the LLM
+provider) should stay isolated behind a thin `client/` wrapper per module rather than shared across
+them.
 
 ## 3. Cross-cutting decisions (made so far)
 
@@ -148,11 +157,27 @@ Resolved by the `add-agent` change; full rationale and alternatives considered i
   deciding factor, and the model choice sits behind `clients/llm-client.ts`, the one file that knows
   the provider.
 
-### App / frontend (`src/app`)
-- Framework choice (kept minimal — plain server-rendered page, or a small SPA).
-- How `app` talks to `agent`: direct in-process call (single Node process, since the project is
-  a single package — see decided structure above) vs. exposing a small local HTTP endpoint.
-- Whether/how source indication is rendered (e.g. citing candidate name + PDF link per answer).
+### App / frontend (`src/app`) — decided
+
+Resolved by the `add-app` change; full rationale and alternatives considered in
+[openspec/changes/add-app/design.md](../openspec/changes/add-app/design.md)
+(as-built reference: [context/app.md](../context/app.md)):
+
+- **Framework choice**: a small SPA — Vite + React 19, no meta-framework, no router (one screen), no
+  component library, no state library (`useState`/`useContext` only). React is not a free choice
+  here: `@cloudflare/ai-chat` and `agents` both declare `react@^19` as a peer, and choosing the UI
+  framework is really choosing to use the agent SDK's own chat client instead of hand-rolling its
+  wire protocol.
+- **How `app` talks to `agent`**: neither in-process call nor a new HTTP endpoint — `agent` is
+  already a separate Cloudflare Worker process (`wrangler dev`), so `app` opens the same
+  WebSocket/chat protocol a person's browser would, via `useAgent` + `useAgentChat`, proxied
+  same-origin by Vite (`server.proxy`, `ws: true`) so no CORS configuration is needed on the Worker.
+- **Source indication**: a dedicated source panel, and only there — the conversation itself stays
+  prose. The panel lists the most recent answered turn's candidates one per row, each showing the CV's
+  generated portrait beside the candidate's name, the name linking to the generated PDF (both served
+  by pointing Vite's `publicDir` at the repo's `data/`). Sources are *derived*, not transported: `app`
+  reuses `agent`'s own `extractSources` over the `tool-scan-cv` parts the stream already carries, so no
+  citation can be hallucinated and no new data has to cross the wire.
 
 ## 5. Non-goals
 

@@ -1,0 +1,7 @@
+{
+  // Cursor loads tsconfig.json, not tsconfig.app.json. This file is what
+  // puts vite/client (including *.module.css) in scope for the editor.
+  "extends": "../../tsconfig.app.json",
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": []
+}

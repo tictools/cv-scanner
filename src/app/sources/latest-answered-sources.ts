@@ -1,0 +1,15 @@
+import type { SourceReference } from "@agent/extraction/extract-sources";
+import type { UIMessage } from "ai";
+import { sourcesFromMessage } from "./message-sources";
+
+export const latestAnsweredSources = (messages: UIMessage[]): SourceReference[] => {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const sources = sourcesFromMessage(messages[index]!);
+
+    if (sources.length > 0) {
+      return sources;
+    }
+  }
+
+  return [];
+};

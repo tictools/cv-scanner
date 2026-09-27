@@ -1,0 +1,22 @@
+/*
+ * The panel itself is the card — the composer lives inside it, so the card's
+ * edges are the column's edges and it matches the source panel beside it.
+ */
+.chatPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-height: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background-color: var(--color-surface);
+}
+
+.messageList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}

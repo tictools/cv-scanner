@@ -7,6 +7,7 @@
     "generate:cvs": "tsx src/feed/index.ts",
     "ingest:cvs": "tsx src/rag/index.ts",
     "dev:agent": "wrangler dev",
+    "dev:app": "vite",
     "lint": "eslint .",
     "test": "vitest run"
   },
@@ -31,6 +32,7 @@
   "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "4.0.78",
+    "@ai-sdk/react": "4.0.119",
     "@cloudflare/ai-chat": "0.12.0",
     "@faker-js/faker": "10.6.0",
     "@google/generative-ai": "0.24.1",
@@ -40,18 +42,27 @@
     "dotenv": "18.0.3",
     "p-limit": "7.3.3",
     "puppeteer": "25.12.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "unpdf": "1.8.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260927.1",
     "@eslint/js": "10.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
     "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
     "eslint": "10.11.0",
     "globals": "17.12.0",
+    "jsdom": "30.1.1",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.1",
+    "vite": "8.3.1",
     "vitest": "5.0.2",
     "wrangler": "4.141.0"
   }

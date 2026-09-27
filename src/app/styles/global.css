@@ -1,0 +1,71 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+:root {
+  /*
+   * Three warm, low-brightness surfaces instead of white: the page recedes,
+   * panels sit on it, and fills (badges, code, hover) sit inside those.
+   */
+  --color-bg: #e4e1db;
+  --color-surface: #f1efea;
+  --color-bg-subtle: #e6e3dc;
+  --color-border: #d3cfc6;
+  /* Boundaries of interactive controls: 3:1 against every surface (WCAG 1.4.11). */
+  --color-border-strong: #7e7871;
+  --color-text: #2f3337;
+  --color-text-muted: #5c6066;
+  --color-primary: #466071;
+  --color-primary-hover: #364b59;
+  --color-danger: #954a43;
+  --color-danger-bg: #eddfdc;
+
+  /* Chat bubbles: a muted sage for the user, a warm grey for the assistant. */
+  --color-bubble-user-bg: #dbe4db;
+  --color-bubble-user-border: #c8d3c8;
+  --color-bubble-assistant-bg: #e7e4de;
+  --color-bubble-assistant-border: #dad6ce;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+
+  --content-max-width: 84rem;
+
+  --font-family-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+
+  --radius: 6px;
+  --radius-panel: 12px;
+  --radius-bubble: 16px;
+
+  --avatar-size: 2.25rem;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
