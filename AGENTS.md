@@ -26,8 +26,8 @@ collection of fake CVs (résumés), structured as four modules under `src/`:
 See [docs/architecture.md](docs/architecture.md) for the full system design (data flow, module
 boundaries, open questions).
 
-Current status: `feed` module implemented (CV generation pipeline); `rag`, `agent`, `app` not
-started yet.
+Current status: `feed` (CV generation pipeline) and `rag` (ingestion + retrieval) modules
+implemented; `agent`, `app` not started yet.
 
 ## 2. Getting Started
 
@@ -38,10 +38,21 @@ started yet.
   commit it). Currently required:
   - `GEMINI_API_KEY` — Google AI Studio key, used for both text and image generation in the
     `feed` module.
+  - `UPSTASH_VECTOR_REST_URL` / `UPSTASH_VECTOR_REST_TOKEN` — `rag`'s runtime credentials for its
+    Upstash Vector index (created with the `openai/text-embedding-3-small` embedding model).
+  - `OPENAI_API_KEY` — a one-time **console-setup** credential, not a runtime one: paste it into
+    the Upstash console when creating/recreating the index (it authorizes Upstash's own call to
+    OpenAI and is stored server-side there). No `rag` code reads this variable; keep it in `.env`
+    only for reference.
 - **Run**: `pnpm generate:cvs` runs the `feed` module's CV generation pipeline (requires
-  `GEMINI_API_KEY`); `pnpm lint` runs ESLint; `pnpm test` runs the unit suite (Vitest). Scripts
-  for `rag`/`agent`/`app` will be added as those modules are implemented — see the Documentation
-  Map below for the design of each one before adding code.
+  `GEMINI_API_KEY`); `pnpm ingest:cvs` runs the `rag` module's ingestion pipeline — extracts every
+  CV PDF's text and indexes one vector per candidate into Upstash Vector (requires
+  `UPSTASH_VECTOR_REST_URL`/`UPSTASH_VECTOR_REST_TOKEN` and a populated `data/` from
+  `generate:cvs`); `pnpm lint` runs ESLint; `pnpm test` runs the unit suite (Vitest) — one
+  integration test in `rag` (`src/rag/retrieval/ground-truth.test.ts`) exercises the live Upstash
+  index and skips itself when the two Upstash variables are absent. Scripts for `agent`/`app` will
+  be added as those modules are implemented — see the Documentation Map below for the design of
+  each one before adding code.
 
 ## 3. Tech Stack
 
@@ -65,8 +76,11 @@ started yet.
 - **CV generation** (installed, used by `feed`): `zod` (schema validation), `@faker-js/faker`
   (deterministic metadata), `puppeteer` (HTML → PDF rendering), `p-limit` (LLM call
   concurrency), `@google/generative-ai` (Gemini SDK), `dotenv`.
-- **RAG pipeline & frontend**: not yet decided. Update this section and the Documentation Map
-  once those modules are designed.
+- **RAG pipeline** (installed, used by `rag`): `unpdf` (PDF text extraction, ESM-first wrapper
+  over `pdfjs-dist`), `@upstash/vector` (vector store client, the only file importing it is
+  `src/rag/store/vector-index.ts`).
+- **Frontend**: not yet decided. Update this section and the Documentation Map once `app` is
+  designed.
 
 ## 4. Documentation Map
 
@@ -79,7 +93,8 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Understand/change overall system shape, module boundaries, or cross-cutting decisions          | [docs/architecture.md](docs/architecture.md) | Living — iterates with the module lifecycle                        |
 | Implement any module behavior under `src/` (writing or changing code, not just config/tooling) | [docs/tdd.md](docs/tdd.md)                   | Mandatory — red-green-refactor per task; runner is Vitest |
 | Implement or change `feed` (CV generation) module behavior | [openspec/changes/add-cv-generation/design.md](openspec/changes/add-cv-generation/design.md) and [.../specs/feed-cv-generation/spec.md](openspec/changes/add-cv-generation/specs/feed-cv-generation/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
-| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, starting with [context/feed.md](context/feed.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
+| Implement or change `rag` (ingestion + retrieval) module behavior | [openspec/changes/add-rag-retrieval/design.md](openspec/changes/add-rag-retrieval/design.md) and [.../specs/rag-ingestion/spec.md](openspec/changes/add-rag-retrieval/specs/rag-ingestion/spec.md) / [.../specs/rag-retrieval/spec.md](openspec/changes/add-rag-retrieval/specs/rag-retrieval/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
+| Understand how an already-implemented module actually works (onboarding, docs site), as opposed to why it was designed that way | `context/<module>.md`, e.g. [context/feed.md](context/feed.md), [context/rag.md](context/rag.md) | Living — as-built reference per module; Mermaid diagrams; feeds the future VitePress docs site. Update alongside the module's code, independently of the OpenSpec design/spec row above |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 
 ## 5. Skills Registry

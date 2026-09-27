@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "generate:cvs": "tsx src/feed/index.ts",
+    "ingest:cvs": "tsx src/rag/index.ts",
     "lint": "eslint .",
     "test": "vitest run"
   },
@@ -30,9 +31,11 @@
   "dependencies": {
     "@faker-js/faker": "10.6.0",
     "@google/generative-ai": "0.24.1",
+    "@upstash/vector": "1.2.3",
     "dotenv": "18.0.3",
     "p-limit": "7.3.3",
     "puppeteer": "25.12.0",
+    "unpdf": "1.8.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
