@@ -21,7 +21,7 @@ vi.mock("../store/vector-index", () => ({
 }));
 
 describe("retrieve", () => {
-  it("maps store hits to candidateId/source/content/score", async () => {
+  it("maps store hits to candidateId/candidateName/source/content/score", async () => {
     mockQuery.mockResolvedValue([
       {
         id: "jane-doe",
@@ -29,6 +29,7 @@ describe("retrieve", () => {
         data: "irrelevant",
         metadata: {
           candidateId: "jane-doe",
+          name: "Jane Doe",
           source: "data/cvs/jane-doe.pdf",
           content: "Jane Doe CV text",
         },
@@ -40,11 +41,37 @@ describe("retrieve", () => {
     expect(results).toEqual([
       {
         candidateId: "jane-doe",
+        candidateName: "Jane Doe",
         source: "data/cvs/jane-doe.pdf",
         content: "Jane Doe CV text",
         score: 0.5,
       },
     ]);
+  });
+
+  it("uses caller-supplied credentials instead of reading the process environment", async () => {
+    mockQuery.mockResolvedValue([]);
+
+    await retrieve("backend engineer", {
+      topK: 5,
+      credentials: { url: "https://caller.upstash.io", token: "caller-token" },
+    });
+
+    expect(mockCreateVectorIndex).toHaveBeenCalledWith({
+      url: "https://caller.upstash.io",
+      token: "caller-token",
+    });
+  });
+
+  it("falls back to requireUpstashCredentials when credentials are omitted", async () => {
+    mockQuery.mockResolvedValue([]);
+
+    await retrieve("backend engineer", { topK: 5 });
+
+    expect(mockCreateVectorIndex).toHaveBeenCalledWith({
+      url: "https://example.upstash.io",
+      token: "token",
+    });
   });
 
   it("honours topK by passing it through to the store", async () => {
@@ -64,13 +91,13 @@ describe("retrieve", () => {
         id: "a",
         score: 0.2,
         data: "",
-        metadata: { candidateId: "a", source: "a.pdf", content: "a" },
+        metadata: { candidateId: "a", name: "A", source: "a.pdf", content: "a" },
       },
       {
         id: "b",
         score: 0.9,
         data: "",
-        metadata: { candidateId: "b", source: "b.pdf", content: "b" },
+        metadata: { candidateId: "b", name: "B", source: "b.pdf", content: "b" },
       },
     ]);
 
@@ -93,14 +120,14 @@ describe("retrieve", () => {
         id: "a",
         score: 0.01,
         data: "",
-        metadata: { candidateId: "a", source: "a.pdf", content: "a" },
+        metadata: { candidateId: "a", name: "A", source: "a.pdf", content: "a" },
       },
     ]);
 
     const results = await retrieve("query", { topK: 5 });
 
     expect(results).toEqual([
-      { candidateId: "a", source: "a.pdf", content: "a", score: 0.01 },
+      { candidateId: "a", candidateName: "A", source: "a.pdf", content: "a", score: 0.01 },
     ]);
   });
 });

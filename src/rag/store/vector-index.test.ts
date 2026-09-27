@@ -52,6 +52,7 @@ describe("createVectorIndex", () => {
       data: "Jane Doe's CV text",
       metadata: {
         candidateId: "jane-doe",
+        name: "Jane Doe",
         source: "data/cvs/jane-doe.pdf",
         content: "Jane Doe's CV text",
       },
@@ -62,6 +63,7 @@ describe("createVectorIndex", () => {
       data: "Jane Doe's CV text",
       metadata: {
         candidateId: "jane-doe",
+        name: "Jane Doe",
         source: "data/cvs/jane-doe.pdf",
         content: "Jane Doe's CV text",
       },
@@ -71,6 +73,7 @@ describe("createVectorIndex", () => {
   it("delegates query to the underlying index, sending the query text as data", async () => {
     const metadata = {
       candidateId: "jane-doe",
+      name: "Jane Doe",
       source: "data/cvs/jane-doe.pdf",
       content: "Jane Doe's CV text",
     };

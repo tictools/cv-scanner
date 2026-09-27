@@ -6,6 +6,7 @@ export const MANIFEST_PATH = `${DATA_DIR}/manifest.json`;
 
 export interface CvLocation {
   candidateId: string;
+  name: string;
   pdfPath: string;
 }
 
@@ -13,7 +14,7 @@ export const readCvLocations = async (
   manifestPath: string = MANIFEST_PATH,
 ): Promise<CvLocation[]> => {
   const raw = await readFile(manifestPath, "utf-8");
-  const entries: { candidateId: string; pdfPath: string }[] = JSON.parse(raw);
+  const entries: { candidateId: string; name: string; pdfPath: string }[] = JSON.parse(raw);
 
-  return entries.map(({ candidateId, pdfPath }) => ({ candidateId, pdfPath }));
+  return entries.map(({ candidateId, name, pdfPath }) => ({ candidateId, name, pdfPath }));
 };
