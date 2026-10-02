@@ -1,11 +1,12 @@
 import { useState } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Avatar.module.css";
 
 export interface AvatarProps {
   src: string;
   name: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 const INITIALS_LIMIT = 2;
@@ -32,7 +33,7 @@ export const Avatar = ({ src, name, className = "" }: AvatarProps) => {
 
   if (unavailable) {
     return (
-      <span role="img" aria-label={name} className={classNames(styles.avatar, styles["avatar--fallback"], className)}>
+      <span role="img" aria-label={name} className={classNames(styles["avatar"], styles["avatar--fallback"], className)}>
         {initialsOf(name)}
       </span>
     );
@@ -42,7 +43,7 @@ export const Avatar = ({ src, name, className = "" }: AvatarProps) => {
     <img
       src={src}
       alt={name}
-      className={classNames(styles.avatar, className)}
+      className={classNames(styles["avatar"], className)}
       onError={() => setUnavailable(true)}
     />
   );

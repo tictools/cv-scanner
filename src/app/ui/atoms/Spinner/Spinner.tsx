@@ -1,9 +1,10 @@
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Spinner.module.css";
 
 export interface SpinnerProps {
   label: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**
@@ -15,5 +16,5 @@ export interface SpinnerProps {
  * ```
  */
 export const Spinner = ({ label, className = "" }: SpinnerProps) => (
-  <span role="status" aria-label={label} className={classNames(styles.spinner, className)} />
+  <span role="status" aria-label={label} className={classNames(styles["spinner"], className)} />
 );

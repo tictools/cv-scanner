@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import type { NonEmptyArray } from "@shared/ts/typeUtils/aliases";
 
 export const COMPACTION_THRESHOLD = 10;
 export const RETAINED_MESSAGE_COUNT = 5;
@@ -33,5 +34,7 @@ export const compact = (messages: UIMessage[]): UIMessage[] => {
   const olderMessages = messages.slice(0, messages.length - RETAINED_MESSAGE_COUNT);
   const recentMessages = messages.slice(messages.length - RETAINED_MESSAGE_COUNT);
 
-  return [buildSummaryMessage(olderMessages), ...recentMessages];
+  const compacted: NonEmptyArray<UIMessage> = [buildSummaryMessage(olderMessages), ...recentMessages];
+
+  return compacted;
 };

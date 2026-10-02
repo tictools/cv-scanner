@@ -42,9 +42,26 @@ describe("ScannerAgent.onChatMessage", () => {
     expect(mockStreamAgent).toHaveBeenCalledWith({
       model: fakeModel,
       messages,
-      credentials: { url: "https://example.upstash.io", token: "token" },
+      resolveCredentials: expect.any(Function),
+    });
+    expect(mockStreamAgent.mock.calls[0]![0].resolveCredentials()).toEqual({
+      url: "https://example.upstash.io",
+      token: "token",
     });
     expect(response).toBe(fakeResponse);
+  });
+
+  it("does not validate the Upstash pair up front, leaving a missing variable to surface as a tool error", async () => {
+    mockStreamAgent.mockReset();
+    mockStreamAgent.mockResolvedValue({ toUIMessageStreamResponse: () => new Response("stream") });
+    const fakeThis = {
+      env: { OPENAI_API_KEY: "sk-test", UPSTASH_VECTOR_REST_URL: "", UPSTASH_VECTOR_REST_TOKEN: "token" },
+      messages: [],
+    };
+
+    await ScannerAgent.prototype.onChatMessage.call(fakeThis);
+
+    expect(() => mockStreamAgent.mock.calls[0]![0].resolveCredentials()).toThrow(/UPSTASH_VECTOR_REST_URL/);
   });
 
   it("fails fast naming OPENAI_API_KEY when it is missing, before calling the client or streamAgent", async () => {

@@ -23,8 +23,8 @@ export interface ChatPanelProps {
  * ```
  */
 export const ChatPanel = ({ messages, state, onAsk }: ChatPanelProps) => (
-  <Container className={styles.chatPanel}>
-    <Container className={styles.messageList}>
+  <Container className={styles["chatPanel"]}>
+    <Container className={styles["messageList"]}>
       {messages.map((message) => (
         <ChatMessage key={message.id} message={message} />
       ))}

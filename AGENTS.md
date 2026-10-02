@@ -26,6 +26,11 @@ collection of fake CVs (résumés), structured as four modules under `src/`:
 See [docs/architecture.md](docs/architecture.md) for the full system design (data flow, module
 boundaries, open questions).
 
+Alongside the four modules, `src/shared/` holds runtime-agnostic code more than one module needs
+(currently environment-variable access, `src/shared/env/`, imported via `@shared/*`). It is not a
+module and the only place the generic name `shared` is allowed — see
+[docs/architecture.md §2.1](docs/architecture.md).
+
 Current status: all four `src/` modules are implemented — `feed` (CV generation pipeline), `rag`
 (ingestion + retrieval), `agent` (orchestration — a Cloudflare Worker + Durable Object, `pnpm
 dev:agent`), and `app` (frontend chat UI — a Vite + React 19 SPA, `pnpm dev:app`).
@@ -123,6 +128,7 @@ doc yet, write one under `docs/` as part of the task and add a row here.
 | Implement or change `rag` (ingestion + retrieval) module behavior | [openspec/changes/add-rag-retrieval/design.md](openspec/changes/add-rag-retrieval/design.md) and [.../specs/rag-ingestion/spec.md](openspec/changes/add-rag-retrieval/specs/rag-ingestion/spec.md) / [.../specs/rag-retrieval/spec.md](openspec/changes/add-rag-retrieval/specs/rag-retrieval/spec.md) | Implemented — path moves to `openspec/specs/` once the change is archived |
 | Implement or change `agent` (orchestration) module behavior | [openspec/changes/add-agent/design.md](openspec/changes/add-agent/design.md) and [.../specs/agent-orchestration/spec.md](openspec/changes/add-agent/specs/agent-orchestration/spec.md) / [.../specs/agent-tools/spec.md](openspec/changes/add-agent/specs/agent-tools/spec.md) / [.../specs/agent-sources/spec.md](openspec/changes/add-agent/specs/agent-sources/spec.md) | Implemented — Cloudflare Worker + Durable Object (`pnpm dev:agent`), OpenAI via the AI SDK, `scan-cv` retrieval tool; path moves to `openspec/specs/` once the change is archived |
 | Implement or change `app` (frontend UI) module behavior | [openspec/changes/archive/2026-09-27-add-app/design.md](openspec/changes/archive/2026-09-27-add-app/design.md) and [.../specs/app-chat/spec.md](openspec/specs/app-chat/spec.md) / [.../specs/app-sources/spec.md](openspec/specs/app-sources/spec.md) | Archived — Vite + React 19 SPA (`pnpm dev:app`), Atomic Design, `useScannerChat` wrapping `useAgent`/`useAgentChat` against the agent Worker (proxied via `vite.config.ts`), sources derived from `scan-cv`'s tool parts via a narrow `@agent/extraction/extract-sources` import |
+| Add or change code under `src/shared/`, or read/validate an environment variable in any module | [docs/architecture.md §2.1](docs/architecture.md) | Decided — cross-module, runtime-agnostic code only; use `@shared/env/require-env-var` instead of hand-rolling env validation |
 | See how the four modules communicate (onboarding, the workflow diagram) | [context/workflow.md](context/workflow.md) | Living — one diagram-first page. Update it when the wiring changes. File-level behavior stays in that module's OpenSpec design |
 | Write or edit any code file, in any module | [docs/code-conventions.md](docs/code-conventions.md) | Mandatory — in-file layout, and directory layout (no loose files; no `utils`/`helpers`) |
 

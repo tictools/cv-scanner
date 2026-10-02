@@ -27,9 +27,9 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
   const variant = isUser ? "user" : "assistant";
 
   return (
-    <Container className={classNames(styles.chatMessage, styles[`chatMessage--${variant}`])}>
-      <Container className={styles.chatMessage__bubble}>
-        <Heading level={4} className={styles.chatMessage__author}>
+    <Container className={classNames(styles["chatMessage"], styles[`chatMessage--${variant}`])}>
+      <Container className={styles["chatMessage__bubble"]}>
+        <Heading level={4} className={styles["chatMessage__author"]}>
           {isUser ? "You" : "Assistant"}
         </Heading>
         {message.parts.map((part, index) => {

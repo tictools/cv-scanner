@@ -1,9 +1,10 @@
 import type { ComponentPropsWithoutRef } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Container.module.css";
 
 export interface ContainerProps extends ComponentPropsWithoutRef<"div"> {
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**
@@ -12,12 +13,12 @@ export interface ContainerProps extends ComponentPropsWithoutRef<"div"> {
  *
  * @example
  * ```tsx
- * <Container className={styles.searchBar}>
+ * <Container className={styles["searchBar"]}>
  *   <Input ... />
  *   <Button ... />
  * </Container>
  * ```
  */
 export const Container = ({ className = "", ...rest }: ContainerProps) => (
-  <div className={classNames(styles.container, className)} {...rest} />
+  <div className={classNames(styles["container"], className)} {...rest} />
 );

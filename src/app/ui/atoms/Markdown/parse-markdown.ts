@@ -1,3 +1,5 @@
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
+
 export type InlineNode =
   | { type: "text"; value: string }
   | { type: "strong"; value: string }
@@ -14,7 +16,7 @@ const BULLET_PATTERN = /^\s*[-*]\s+(.*)$/;
 const ORDERED_PATTERN = /^\s*\d+\.\s+(.*)$/;
 const INLINE_PATTERN = /\*\*([^*]+)\*\*|\*([^*\n]+)\*|`([^`\n]+)`/g;
 
-const listItemOf = (line: string): { ordered: boolean; text: string } | undefined => {
+const listItemOf = (line: string): Maybe<{ ordered: boolean; text: string }> => {
   const bullet = BULLET_PATTERN.exec(line);
 
   if (bullet) {
@@ -72,7 +74,7 @@ const parseInline = (text: string): InlineNode[] => {
  */
 const groupLines = (lines: string[]): RawBlock[] => {
   const blocks: RawBlock[] = [];
-  let open: RawBlock | undefined;
+  let open: Maybe<RawBlock>;
 
   for (const line of lines) {
     const item = listItemOf(line);

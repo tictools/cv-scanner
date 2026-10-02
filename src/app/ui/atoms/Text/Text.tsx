@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Text.module.css";
 
 export interface TextProps {
   children: ReactNode;
   variant?: "normal" | "small" | "muted" | "mono";
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**
@@ -17,5 +18,5 @@ export interface TextProps {
  * ```
  */
 export const Text = ({ children, variant = "normal", className = "" }: TextProps) => (
-  <p className={classNames(styles.text, styles[`text--${variant}`], className)}>{children}</p>
+  <p className={classNames(styles["text"], styles[`text--${variant}`], className)}>{children}</p>
 );

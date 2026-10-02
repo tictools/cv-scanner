@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import type { NonEmptyArray, ValueOf } from "@shared/ts/typeUtils/aliases";
 import type { Candidate, Seniority } from "../cv/types";
 import { slugify } from "../naming/slug";
 
@@ -33,7 +34,7 @@ const SECTORS = [
 
 const LANGUAGES = ["English", "Spanish", "Catalan"] as const;
 
-const SENIORITIES: readonly Seniority[] = ["junior", "mid", "senior", "lead"];
+const SENIORITIES = ["junior", "mid", "senior", "lead"] as const satisfies Readonly<NonEmptyArray<Seniority>>;
 
 const GENDERS = ["female", "male"] as const;
 
@@ -49,19 +50,21 @@ const ETHNICITIES = [
 ] as const;
 
 /** Exported: candidates.test.ts asserts against it to avoid duplicating the ranges. */
-export const YEARS_BY_SENIORITY: Record<Seniority, [number, number]> = {
+export const YEARS_BY_SENIORITY = {
   junior: [0, 2],
   mid: [3, 5],
   senior: [6, 12],
   lead: [10, 20],
-};
+} as const satisfies Record<Seniority, readonly [number, number]>;
 
-const AGE_RANGES_BY_SENIORITY: Record<Seniority, readonly string[]> = {
+type YearsRange = ValueOf<typeof YEARS_BY_SENIORITY>;
+
+const AGE_RANGES_BY_SENIORITY = {
   junior: ["22-26", "24-29"],
   mid: ["27-33", "30-36"],
   senior: ["33-40", "37-44"],
   lead: ["40-47", "44-52"],
-};
+} as const satisfies Record<Seniority, Readonly<NonEmptyArray<string>>>;
 
 /** Rotates through `list` with a stride coprime to its length, to decorrelate fields. */
 const pick = <T>({
@@ -69,7 +72,7 @@ const pick = <T>({
   index,
   stride,
 }: {
-  list: readonly T[];
+  list: Readonly<NonEmptyArray<T>>;
   index: number;
   stride: number;
 }): T => {
@@ -97,7 +100,8 @@ export const generateCandidates = (
     usedIds.set(baseId, seen + 1);
     const id = seen === 0 ? baseId : `${baseId}-${seen + 1}`;
 
-    const [minYears, maxYears] = YEARS_BY_SENIORITY[seniority];
+    const yearsRange: YearsRange = YEARS_BY_SENIORITY[seniority];
+    const [minYears, maxYears] = yearsRange;
 
     return {
       id,

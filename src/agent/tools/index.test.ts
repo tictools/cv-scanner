@@ -8,10 +8,10 @@ describe("createTools", () => {
     expect(Object.keys(tools)).toEqual(["scan-cv"]);
   });
 
-  it("passes credentials through to the scan-cv tool", () => {
-    const credentials = { url: "https://example.upstash.io", token: "token" };
+  it("passes the credentials resolver through to the scan-cv tool", () => {
+    const resolveCredentials = () => ({ url: "https://example.upstash.io", token: "token" });
 
-    const tools = createTools({ credentials });
+    const tools = createTools({ resolveCredentials });
 
     expect(tools["scan-cv"]).toBeDefined();
   });

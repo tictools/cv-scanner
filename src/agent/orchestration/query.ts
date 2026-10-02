@@ -13,7 +13,7 @@ export interface AgentQueryOptions {
   model: LanguageModel;
   messages: UIMessage[];
   maxSteps?: number;
-  credentials?: CreateToolsOptions["credentials"];
+  resolveCredentials?: CreateToolsOptions["resolveCredentials"];
 }
 
 const SCAN_CV_TOOL_NAME = "scan-cv";
@@ -32,10 +32,10 @@ const latestUserQuestion = (messages: UIMessage[]): string => {
     .join(" ");
 };
 
-const sharedCallConfig = async ({ messages, maxSteps, credentials }: AgentQueryOptions) => ({
+const sharedCallConfig = async ({ messages, maxSteps, resolveCredentials }: AgentQueryOptions) => ({
   system: SYSTEM_PROMPT,
   messages: await convertToModelMessages(compact(messages)),
-  tools: createTools({ credentials }),
+  tools: createTools({ resolveCredentials }),
   stopWhen: stepCountIs(maxSteps ?? DEFAULT_MAX_STEPS),
 });
 

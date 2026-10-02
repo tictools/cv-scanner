@@ -1,11 +1,12 @@
 import { Fragment, type ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import { parseMarkdown, type InlineNode, type MarkdownBlock } from "./parse-markdown";
 import styles from "./Markdown.module.css";
 
 export interface MarkdownProps {
   children: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 const inlineElement = (node: InlineNode, index: number): ReactNode => {
@@ -21,7 +22,7 @@ const inlineElement = (node: InlineNode, index: number): ReactNode => {
 
   if (node.type === "code") {
     return (
-      <code key={key} className={styles.markdown__code}>
+      <code key={key} className={styles["markdown__code"]}>
         {node.value}
       </code>
     );
@@ -35,7 +36,7 @@ const blockElement = (block: MarkdownBlock, index: number): ReactNode => {
 
   if (block.type === "paragraph") {
     return (
-      <p key={key} className={styles.markdown__paragraph}>
+      <p key={key} className={styles["markdown__paragraph"]}>
         {block.content.map(inlineElement)}
       </p>
     );
@@ -44,9 +45,9 @@ const blockElement = (block: MarkdownBlock, index: number): ReactNode => {
   const ListTag = block.ordered ? "ol" : "ul";
 
   return (
-    <ListTag key={key} className={styles.markdown__list}>
+    <ListTag key={key} className={styles["markdown__list"]}>
       {block.items.map((item, itemIndex) => (
-        <li key={`item-${itemIndex}`} className={styles.markdown__item}>
+        <li key={`item-${itemIndex}`} className={styles["markdown__item"]}>
           {item.map(inlineElement)}
         </li>
       ))}
@@ -65,5 +66,5 @@ const blockElement = (block: MarkdownBlock, index: number): ReactNode => {
  * ```
  */
 export const Markdown = ({ children, className = "" }: MarkdownProps) => (
-  <div className={classNames(styles.markdown, className)}>{parseMarkdown(children).map(blockElement)}</div>
+  <div className={classNames(styles["markdown"], className)}>{parseMarkdown(children).map(blockElement)}</div>
 );

@@ -16,7 +16,7 @@ describe("SourcePanel", () => {
 
     const EXPECTED_ENTRIES = 2;
 
-    expect(container.querySelectorAll(`.${styles.sourceList} > *`).length).toBe(EXPECTED_ENTRIES);
+    expect(container.querySelectorAll(`.${styles["sourceList"]} > *`).length).toBe(EXPECTED_ENTRIES);
     expect(screen.getByRole("link", { name: "Jane Doe" })).toBeTruthy();
     expect(screen.getByRole("img", { name: "Jane Doe" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "John Roe" })).toBeTruthy();

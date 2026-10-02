@@ -21,9 +21,9 @@ export interface SourceEntryProps {
  * ```
  */
 export const SourceEntry = ({ source }: SourceEntryProps) => (
-  <Container className={styles.sourceEntry}>
+  <Container className={styles["sourceEntry"]}>
     <Avatar src={photoUrl(source.candidateId)} name={source.candidateName} />
-    <Link href={pdfUrl(source.source)} className={styles.sourceEntry__link}>
+    <Link href={pdfUrl(source.source)} className={styles["sourceEntry__link"]}>
       <Badge>{source.candidateName}</Badge>
     </Link>
   </Container>

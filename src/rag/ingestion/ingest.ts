@@ -1,3 +1,4 @@
+import type { PromiseOr } from "@shared/ts/typeUtils/aliases";
 import type { CvLocation } from "../dataset/paths";
 import { normalizeText } from "../extraction/normalize-text";
 import { extractText as extractPdfText } from "../extraction/pdf-text";
@@ -11,7 +12,7 @@ export interface IngestSummary {
 export interface IngestParams {
   store: VectorIndex;
   cvLocations: CvLocation[];
-  extractText?: (options: { pdfPath: string }) => Promise<string>;
+  extractText?: (options: { pdfPath: string }) => PromiseOr<string>;
 }
 
 export const ingest = async ({
