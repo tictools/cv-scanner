@@ -1,4 +1,6 @@
-export type ClassValue = string | false | null | undefined | Record<string, boolean> | ClassValue[];
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
+
+export type ClassValue = Maybe<string | false | null> | Record<string, boolean> | ClassValue[];
 
 const toTokens = (value: ClassValue): string[] => {
   if (!value) {

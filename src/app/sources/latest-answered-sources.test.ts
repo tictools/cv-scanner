@@ -26,22 +26,22 @@ describe("latestAnsweredSources", () => {
   it("returns the last assistant message's sources when it has any", () => {
     const messages = [scanCVMessage({ id: "a", score: 0.5 }), scanCVMessage({ id: "b", score: 0.9 })];
 
-    expect(latestAnsweredSources(messages).map((source) => source.candidateId)).toEqual(["b"]);
+    expect(latestAnsweredSources(messages)?.map((source) => source.candidateId)).toEqual(["b"]);
   });
 
   it("skips a trailing message with no sources and returns the previous answered turn's", () => {
     const messages = [scanCVMessage({ id: "a", score: 0.5 }), textMessage({ id: "b" })];
 
-    expect(latestAnsweredSources(messages).map((source) => source.candidateId)).toEqual(["a"]);
+    expect(latestAnsweredSources(messages)?.map((source) => source.candidateId)).toEqual(["a"]);
   });
 
-  it("returns an empty list when no message has any sources", () => {
+  it("returns undefined when no message has any sources", () => {
     const messages = [textMessage({ id: "a" }), textMessage({ id: "b" })];
 
-    expect(latestAnsweredSources(messages)).toEqual([]);
+    expect(latestAnsweredSources(messages)).toBeUndefined();
   });
 
-  it("returns an empty list for an empty conversation", () => {
-    expect(latestAnsweredSources([])).toEqual([]);
+  it("returns undefined for an empty conversation", () => {
+    expect(latestAnsweredSources([])).toBeUndefined();
   });
 });

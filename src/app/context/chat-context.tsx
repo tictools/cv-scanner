@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 
 const SESSION_ID_STORAGE_KEY = "cv-scanner:session-id";
 
@@ -16,7 +17,7 @@ interface ChatContextValue {
   startNewConversation: () => void;
 }
 
-const ChatContext = createContext<ChatContextValue | undefined>(undefined);
+const ChatContext = createContext<Maybe<ChatContextValue>>(undefined);
 
 export interface ChatProviderProps {
   children: ReactNode;

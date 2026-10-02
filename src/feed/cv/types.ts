@@ -1,3 +1,5 @@
+import type { Nullable } from "@shared/ts/typeUtils/aliases";
+
 export type Seniority = "junior" | "mid" | "senior" | "lead";
 
 export interface Candidate {
@@ -30,7 +32,7 @@ export interface CvExperience {
   title: string;
   company: string;
   startDate: string;
-  endDate: string | null;
+  endDate: Nullable<string>;
   description: string;
 }
 

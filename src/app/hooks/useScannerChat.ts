@@ -1,8 +1,15 @@
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
 import type { UIMessage } from "ai";
+import type { ValueOf } from "@shared/ts/typeUtils/aliases";
 
-export type ScannerChatState = "idle" | "streaming" | "error";
+const SCANNER_CHAT_STATES = {
+  idle: "idle",
+  streaming: "streaming",
+  error: "error",
+} as const;
+
+export type ScannerChatState = ValueOf<typeof SCANNER_CHAT_STATES>;
 
 export interface UseScannerChatOptions {
   sessionId: string;
@@ -16,10 +23,10 @@ export interface UseScannerChatResult {
 
 const deriveState = ({ isStreaming, failed }: { isStreaming: boolean; failed: boolean }): ScannerChatState => {
   if (isStreaming) {
-    return "streaming";
+    return SCANNER_CHAT_STATES.streaming;
   }
 
-  return failed ? "error" : "idle";
+  return failed ? SCANNER_CHAT_STATES.error : SCANNER_CHAT_STATES.idle;
 };
 
 /**

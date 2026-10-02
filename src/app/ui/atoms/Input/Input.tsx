@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Input.module.css";
 
@@ -8,7 +9,7 @@ export interface InputProps {
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   placeholder?: string;
   disabled?: boolean;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

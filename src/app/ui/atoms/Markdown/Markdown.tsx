@@ -1,11 +1,12 @@
 import { Fragment, type ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import { parseMarkdown, type InlineNode, type MarkdownBlock } from "./parse-markdown";
 import styles from "./Markdown.module.css";
 
 export interface MarkdownProps {
   children: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 const inlineElement = (node: InlineNode, index: number): ReactNode => {

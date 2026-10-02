@@ -1,9 +1,10 @@
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Spinner.module.css";
 
 export interface SpinnerProps {
   label: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

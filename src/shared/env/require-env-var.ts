@@ -1,4 +1,6 @@
-export type EnvSource<Name extends string> = Readonly<Partial<Record<Name, string | undefined>>>;
+import type { Maybe } from "../ts/typeUtils/aliases";
+
+export type EnvSource<Name extends string> = Readonly<Partial<Record<Name, Maybe<string>>>>;
 
 export interface RequireEnvVarOptions<Name extends string> {
   env: EnvSource<Name>;

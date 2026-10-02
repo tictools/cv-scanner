@@ -1,10 +1,11 @@
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { requireUpstashCredentials, type UpstashCredentials } from "../env/upstash-credentials";
 import { createVectorIndex } from "../store/vector-index";
 import type { RetrievedResult } from "./types";
 
 export interface RetrieveOptions {
   topK: number;
-  credentials?: UpstashCredentials | undefined;
+  credentials?: Maybe<UpstashCredentials>;
 }
 
 export const retrieve = async (

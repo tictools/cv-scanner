@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Button.module.css";
 
@@ -8,7 +9,7 @@ export interface ButtonProps {
   variant?: "primary" | "secondary" | "danger";
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

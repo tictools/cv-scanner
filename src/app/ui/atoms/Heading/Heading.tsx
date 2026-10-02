@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Heading.module.css";
 
 export interface HeadingProps {
   children: ReactNode;
   level?: 1 | 2 | 3 | 4;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

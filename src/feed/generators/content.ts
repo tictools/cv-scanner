@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pLimit from "p-limit";
+import type { Maybe, Nullable } from "@shared/ts/typeUtils/aliases";
 import type { GeminiClient } from "../client/gemini-client";
 import type { Candidate, Cv, CvContent } from "../cv/types";
 import { cvContentSchema } from "../cv/schema";
@@ -51,7 +52,7 @@ export const generateContent = async ({
 interface GetContentParams {
   client: JsonClient;
   candidate: Candidate;
-  cacheDir: string | undefined;
+  cacheDir: Maybe<string>;
 }
 
 const getContent = async ({ client, candidate, cacheDir }: GetContentParams): Promise<CvContent> => {
@@ -72,7 +73,7 @@ const getContent = async ({ client, candidate, cacheDir }: GetContentParams): Pr
   return content;
 };
 
-const readCache = async (path: string): Promise<CvContent | null> => {
+const readCache = async (path: string): Promise<Nullable<CvContent>> => {
   try {
     const parsed = cvContentSchema.safeParse(JSON.parse(await readFile(path, "utf8")));
     return parsed.success ? parsed.data : null;

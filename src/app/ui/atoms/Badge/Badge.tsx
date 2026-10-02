@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Badge.module.css";
 
 export interface BadgeProps {
   children: ReactNode;
   variant?: "neutral" | "error";
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

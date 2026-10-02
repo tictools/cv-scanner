@@ -1,4 +1,5 @@
 import type { SourceReference } from "@agent/extraction/extract-sources";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { Container } from "../../atoms/Container/Container";
 import { Heading } from "../../atoms/Heading/Heading";
 import { Text } from "../../atoms/Text/Text";
@@ -6,7 +7,7 @@ import { SourceEntry } from "../../molecules/SourceEntry/SourceEntry";
 import styles from "./SourcePanel.module.css";
 
 export interface SourcePanelProps {
-  sources: SourceReference[];
+  sources: Maybe<SourceReference[]>;
 }
 
 /**
@@ -23,7 +24,7 @@ export const SourcePanel = ({ sources }: SourcePanelProps) => (
     <Heading level={2} className={styles.sourcePanel__title}>
       Cited CVs
     </Heading>
-    {sources.length === 0 ? (
+    {!sources || sources.length === 0 ? (
       <Text variant="muted">No CVs have been cited yet.</Text>
     ) : (
       <Container className={styles.sourceList}>

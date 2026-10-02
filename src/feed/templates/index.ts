@@ -1,8 +1,9 @@
 import type { Cv } from "../cv/types";
+import type { NonEmptyArray } from "@shared/ts/typeUtils/aliases";
 import { renderClassic } from "./classic";
 import { renderModern } from "./modern";
 
-export const TEMPLATES = ["modern", "classic"] as const;
+export const TEMPLATES = ["modern", "classic"] as const satisfies Readonly<NonEmptyArray<string>>;
 export type TemplateName = (typeof TEMPLATES)[number];
 
 type TemplateRenderer = (params: { cv: Cv; photoDataUri: string }) => string;

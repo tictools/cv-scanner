@@ -1,11 +1,12 @@
 import { useState } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Avatar.module.css";
 
 export interface AvatarProps {
   src: string;
   name: string;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 const INITIALS_LIMIT = 2;

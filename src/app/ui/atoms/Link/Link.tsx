@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Link.module.css";
 
 export interface LinkProps {
   href: string;
   children: ReactNode;
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**

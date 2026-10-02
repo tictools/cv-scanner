@@ -1,9 +1,10 @@
 import type { ComponentPropsWithoutRef } from "react";
+import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Container.module.css";
 
 export interface ContainerProps extends ComponentPropsWithoutRef<"div"> {
-  className?: string | undefined;
+  className?: Maybe<string>;
 }
 
 /**
