@@ -575,7 +575,8 @@ Each atom's JSDoc restates this contract, so call sites see it on hover.
 
 **When to use them.** Use them for render-only branches: "paint A or B", "paint or nothing".
 Today that means `ChatMessage` (user text vs assistant Markdown; the tool part), `RetrievalStatus`
-(pending vs nothing), `SourcePanel` (empty state vs list) and `ChatPanel` (spinner; error banner).
+(pending vs nothing), `SourcePanel` (empty state vs list) and `ChatPanel` (spinner; error banner;
+the new-message indicator).
 
 **When not to.** These stay as ordinary control flow:
 
@@ -664,20 +665,25 @@ src/app/
     │   ├── SearchBar/
     │   ├── SourceEntry/
     │   ├── RetrievalStatus/
-    │   └── ErrorBanner/
+    │   ├── ErrorBanner/
+    │   └── NewMessageIndicator/
     │
     └── organisms/
         ├── ChatPanel/
         │   ├── ChatPanel.tsx
         │   ├── ChatPanel.module.css
-        │   └── ChatPanel.test.tsx
+        │   ├── ChatPanel.test.tsx
+        │   └── hooks/
+        │       ├── useChatScroll.ts
+        │       └── useChatScroll.test.tsx
         └── SourcePanel/
 ```
 
 No `services/` (a per-concern `sources/` directory replaced it), no `types/` (each type lives beside
-the code that defines it, e.g. `SourceReference` in `@agent/extraction/extract-sources`), and no
-component-local `hooks/` subfolders — the one non-trivial hook (`useScannerChat`) lives at the
-module's `hooks/` root since nothing else needs a nested one yet.
+the code that defines it, e.g. `SourceReference` in `@agent/extraction/extract-sources`).
+`useScannerChat` stays at the module's `hooks/` root since every page/organism needing agent state
+shares it; `useChatScroll` lives in a component-local `hooks/` subfolder (`ChatPanel/hooks/`) since
+it is specific to that one organism (added with `add-new-message-indicator`, issue #17).
 
 ---
 

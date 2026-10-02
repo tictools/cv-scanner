@@ -13,6 +13,13 @@
   background-color: var(--color-surface);
 }
 
+.conversation {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
 .messageList {
   flex: 1;
   overflow-y: auto;

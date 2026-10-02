@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Container } from "./Container";
@@ -24,5 +25,13 @@ describe("Container", () => {
 
     expect(wrapper.className).toContain("container");
     expect(wrapper.className).toContain("my-class");
+  });
+
+  it("forwards a ref to the rendered element", () => {
+    const ref = createRef<HTMLDivElement>();
+
+    render(<Container ref={ref} data-testid="wrapper" />);
+
+    expect(ref.current).toBe(screen.getByTestId("wrapper"));
   });
 });
