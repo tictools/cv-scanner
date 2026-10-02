@@ -1,15 +1,16 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { classNames } from "../../classnames/classNames";
 import styles from "./Container.module.css";
 
-export interface ContainerProps extends ComponentPropsWithoutRef<"div"> {
+export interface ContainerProps extends ComponentPropsWithRef<"div"> {
   className?: Maybe<string>;
 }
 
 /**
  * The layout primitive every molecule and organism wraps in, so no raw DOM
- * element is needed above the atom layer.
+ * element is needed above the atom layer. Accepts a `ref` to its rendered
+ * `<div>`, for organisms that need to read or drive scroll position.
  *
  * @example
  * ```tsx
