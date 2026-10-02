@@ -1,24 +1,24 @@
 # Atomic Design
 
-> **Living document** — define la arquitectura de componentes para `src/app`. Actualizar conforme evoluciona la UI.
+> **Living document** — defines the component architecture for `src/app`. Update it as the UI evolves.
 
 ---
 
 ## 1. Overview
 
-El framework de Atomic Design organiza los componentes de la interfaz en cinco niveles jerárquicos, de lo más simple a lo más complejo:
+Atomic Design organises the interface's components into four hierarchical levels, from the simplest to the most complex:
 
 ```
 Atoms → Molecules → Organisms → Pages
 ```
 
-Esta estructura:
-- **Reduce duplicación** — componentes reutilizables a múltiples niveles.
-- **Mejora testabilidad** — cada nivel es testeable de forma aislada.
-- **Aclara responsabilidades** — cada componente sabe qué nivel ocupa.
-- **Facilita onboarding** — desarrolladores nuevos entienden dónde va cada pieza.
+This structure:
+- **Reduces duplication** — components are reusable across several levels.
+- **Improves testability** — each level can be tested in isolation.
+- **Clarifies responsibilities** — every component knows which level it sits at.
+- **Eases onboarding** — new developers understand where each piece goes.
 
-En cv-scanner, los componentes viven bajo `src/app/ui/` y se dividen en estas carpetas.
+In cv-scanner, components live under `src/app/ui/` and are split into these folders.
 
 ---
 
@@ -28,7 +28,7 @@ En cv-scanner, los componentes viven bajo `src/app/ui/` y se dividen en estas ca
 
 **Why:**
 - **Consistency** — all UI primitives flow through a shared, testable, documented layer.
-- **Reusability** — atoms carry design language (spacing, color, typography) that can be changed globally.
+- **Reusability** — atoms carry design language (spacing, colour, typography) that can be changed globally.
 - **Enforcement** — linting (or code review discipline) catches regressions early.
 
 **What counts as "raw HTML":**
@@ -89,33 +89,33 @@ export const ChatPanel: React.FC = () => (
 
 ---
 
-## 3. Definiciones por Nivel
+## 3. Definitions by Level
 
-### 3.1 Atoms (Primitivas)
+### 3.1 Atoms (Primitives)
 
-**Qué son:** Componentes elementales, indivisibles, sin lógica de negocio.
+**What they are:** Elementary, indivisible components with no business logic.
 
-**Características:**
-- Sin estado interno (o estado trivial: hover, focus).
-- Altamente reutilizables.
-- Props explícitas, ninguna de negocio (ej. no "isLoading", sino solo "disabled").
-- Estilo encapsulado con CSS Modules.
-- **Únicos componentes que pueden emitir raw HTML.**
+**Characteristics:**
+- No internal state (or trivial state only: hover, focus).
+- Highly reusable.
+- Explicit props, none of them business-related (e.g. not "isLoading", just "disabled").
+- Styling encapsulated with CSS Modules.
+- **The only components allowed to emit raw HTML.**
 
-**Ejemplos:**
-- `Button` — clickeable, variants (primary, secondary, danger), tamaños.
+**Examples:**
+- `Button` — clickable, variants (primary, secondary, danger), sizes.
 - `Input` — text/textarea, placeholder, onChange handler, disabled state.
-- `Text` — párrafo con estilos (normal, small, mono).
-- `Heading` — h1-h4, con reset de margin/padding base.
-- `Badge` — etiqueta pequeña, color variants.
-- `Spinner` — indicador de cargando (SVG o CSS animation).
-- `Avatar` — imagen redonda, fallback si no carga.
-- `Icon` — iconografía (SVG inline o web font).
-- `Container` — wrapper div para layout.
-- `Flex` — layout primitivo (flex row/column).
-- `Box` — spacer/padding primitivo.
+- `Text` — styled paragraph (normal, small, mono).
+- `Heading` — h1-h4, with the base margin/padding reset.
+- `Badge` — small label, colour variants.
+- `Spinner` — loading indicator (SVG or CSS animation).
+- `Avatar` — round image, with a fallback if it fails to load.
+- `Icon` — iconography (inline SVG or web font).
+- `Container` — wrapper div for layout.
+- `Flex` — layout primitive (flex row/column).
+- `Box` — spacer/padding primitive.
 
-**Ubicación:**
+**Location:**
 ```
 src/app/ui/atoms/
 ├── Button/
@@ -133,7 +133,7 @@ src/app/ui/atoms/
 └── ...
 ```
 
-**Estructura de Componente Atom:**
+**Atom component structure:**
 ```tsx
 // Button.tsx
 import styles from './Button.module.css';
@@ -196,32 +196,32 @@ export const Button: React.FC<ButtonProps> = ({
 
 ---
 
-### 3.2 Molecules (Composiciones)
+### 3.2 Molecules (Compositions)
 
-**Qué son:** Grupos de atoms que forman una unidad funcional.
+**What they are:** Groups of atoms that form a functional unit.
 
-**Características:**
-- Combinan 2+ atoms, **nunca raw HTML.**
-- Pueden tener estado simple (local, no global).
-- Lógica enfocada en la composición (ej. "qué pasa cuando el user escribe en el input").
-- Props reflejan intención compositiva, no negocio (ej. `onSubmit` no `onQueryAgent`).
+**Characteristics:**
+- Combine 2+ atoms, **never raw HTML.**
+- May hold simple state (local, not global).
+- Logic focused on the composition (e.g. "what happens when the user types into the input").
+- Props reflect compositional intent, not business intent (e.g. `onSubmit`, not `onQueryAgent`).
 
-**Ejemplos:**
-- `SearchBar` — Input + Button, maneja onChange y onClick localmente.
-- `ChatMessage` — burbuja de chat: Container (alineada según el autor) + Heading (autor) + Markdown
-  (respuesta del agente) o Text (pregunta del usuario, literal). Las fuentes citadas no van aquí: son
-  del `SourcePanel`.
-- `SourceEntry` — Avatar (foto del CV del candidato) + Link con Badge (el nombre, que abre el PDF).
-- `LoadingState` — Spinner + Text ("Cargando...").
+**Examples:**
+- `SearchBar` — Input + Button, handles onChange and onClick locally.
+- `ChatMessage` — chat bubble: Container (aligned by author) + Heading (author) + Markdown
+  (the agent's answer) or Text (the user's question, verbatim). Cited sources don't belong here:
+  they are the `SourcePanel`'s job.
+- `SourceEntry` — Avatar (the candidate's CV photo) + Link with a Badge (the name, which opens the PDF).
+- `LoadingState` — Spinner + Text ("Loading...").
 
-**Ubicación:**
+**Location:**
 ```
 src/app/ui/molecules/
 ├── SearchBar/
 │   ├── SearchBar.tsx
 │   ├── SearchBar.module.css
 │   └── hooks/
-│       └── useSearchBarInput.ts  (opcional, si lógica es compleja)
+│       └── useSearchBarInput.ts  (optional, if the logic is complex)
 ├── ChatMessage/
 │   ├── ChatMessage.tsx
 │   ├── ChatMessage.module.css
@@ -229,7 +229,7 @@ src/app/ui/molecules/
 └── ...
 ```
 
-**Estructura de Componente Molecule:**
+**Molecule component structure:**
 ```tsx
 // SearchBar.tsx
 import { Input } from '../atoms/Input';
@@ -297,22 +297,22 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
 ---
 
-### 3.3 Organisms (Secciones Complejas)
+### 3.3 Organisms (Complex Sections)
 
-**Qué son:** Composiciones de molecules y atoms que representan una sección lógica de la interfaz.
+**What they are:** Compositions of molecules and atoms that represent a logical section of the interface.
 
-**Características:**
-- Combinan molecules y atoms, **nunca raw HTML.**
-- Pueden tener estado complejo (ej. lista de mensajes).
-- Contienen hooks que manejan lógica de presentación.
-- Props pueden incluir callbacks de negocio (ej. `onQuerySubmit`).
+**Characteristics:**
+- Combine molecules and atoms, **never raw HTML.**
+- May hold complex state (e.g. a list of messages).
+- Contain hooks that handle presentation logic.
+- Props may include business callbacks (e.g. `onQuerySubmit`).
 
-**Ejemplos:**
-- `ChatPanel` — lista de ChatMessage + SearchBar al fondo, gestiona historial.
-- `SourcePanel` — lista vertical de SourceEntry, una fila por candidato citado.
-- `MessageList` — contenedor scrollable de ChatMessages.
+**Examples:**
+- `ChatPanel` — a list of ChatMessage + a SearchBar at the bottom; manages the history.
+- `SourcePanel` — a vertical list of SourceEntry, one row per cited candidate.
+- `MessageList` — a scrollable container of ChatMessages.
 
-**Ubicación:**
+**Location:**
 ```
 src/app/ui/organisms/
 ├── ChatPanel/
@@ -329,7 +329,7 @@ src/app/ui/organisms/
 └── ...
 ```
 
-**Estructura de Componente Organism:**
+**Organism component structure:**
 ```tsx
 // ChatPanel.tsx
 import { ChatMessage } from '../../molecules/ChatMessage';
@@ -383,20 +383,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
 ---
 
-### 3.4 Pages (Páginas Completas)
+### 3.4 Pages (Full Pages)
 
-**Qué són:** Composicions de organisms que formen una pàgina o pantalla completa.
+**What they are:** Compositions of organisms that form a full page or screen.
 
-**Características:**
-- Combinan organisms, molecules y atoms (composición), **nunca raw HTML.**
-- Integran Context API para estado global de la página.
-- Manejan routing y navegación (si aplicable).
-- Props mínimas (ej. params de ruta).
+**Characteristics:**
+- Combine organisms, molecules and atoms (composition), **never raw HTML.**
+- Integrate the Context API for page-wide state.
+- Handle routing and navigation (where applicable).
+- Minimal props (e.g. route params).
 
-**Ejemplos:**
-- `ChatPage` — layout con ChatPanel a un lado, SourcePanel al otro.
+**Examples:**
+- `ChatPage` — layout with the ChatPanel on one side and the SourcePanel on the other.
 
-**Ubicación:**
+**Location:**
 ```
 src/app/pages/
 ├── ChatPage/
@@ -406,7 +406,7 @@ src/app/pages/
 │       └── usePageState.ts
 ```
 
-**Estructura de Componente Page:**
+**Page component structure:**
 ```tsx
 // ChatPage.tsx
 import { ChatPanel } from '../../ui/organisms/ChatPanel';
@@ -435,29 +435,29 @@ export const ChatPage: React.FC = () => {
 
 ---
 
-## 4. Patrones & Convenciones
+## 4. Patterns & Conventions
 
 ### 4.1 Naming
 
-| Elemento | Convención | Ejemplo |
+| Element | Convention | Example |
 |----------|-----------|---------|
-| Componente | PascalCase | `ChatMessage`, `SearchBar` |
-| Archivo TS | PascalCase (match componente) | `ChatMessage.tsx` |
-| Archivo CSS | `ComponentName.module.css` | `ChatMessage.module.css` |
-| Hook | camelCase, prefijo `use` | `useChatHistory.ts` |
-| Archivo utility | camelCase | `chatUtils.ts`, `sourceHelpers.ts` |
+| Component | PascalCase | `ChatMessage`, `SearchBar` |
+| TS file | PascalCase (matches the component) | `ChatMessage.tsx` |
+| CSS file | `ComponentName.module.css` | `ChatMessage.module.css` |
+| Hook | camelCase, `use` prefix | `useChatHistory.ts` |
+| Utility file | camelCase | `chatUtils.ts`, `sourceHelpers.ts` |
 | CSS class (BEM) | `.ComponentName`, `.ComponentName__element`, `.ComponentName--modifier` | `.ChatMessage`, `.ChatMessage__content`, `.ChatMessage--loading` |
 
 ### 4.2 Props
 
-Cada componente declara su contrato con TypeScript:
+Every component declares its contract in TypeScript:
 
 ```tsx
 export interface ComponentProps {
   // required
   requiredProp: string;
 
-  // optional con defaults
+  // optional with defaults
   optionalProp?: boolean;
 
   // callbacks
@@ -469,35 +469,35 @@ export interface ComponentProps {
 }
 ```
 
-**Principios:**
-- Props descriptivas: `onSubmit` no `onHandle`.
-- Tipos explícitos: no `any`.
-- Callbacks explícitos: si un componente dispara una acción, que lo declare en props.
-- `className` opcional para permitir composiciones custom.
+**Principles:**
+- Descriptive props: `onSubmit`, not `onHandle`.
+- Explicit types: no `any`.
+- Explicit callbacks: if a component triggers an action, it declares it in its props.
+- Optional `className` to allow custom compositions.
 
 ### 4.3 State Management
 
-| Tipo de Estado | Ubicación | Herramienta |
+| State type | Location | Tool |
 |---|---|---|
-| Local a componente (ej. input value) | Dentro del componente | `useState` |
-| Compartido en un organism (ej. lista de mensajes) | Hook reutilizable | `useChat.ts` |
-| Global de la app (ej. tema, autenticación) | Context API | `ChatContext.tsx` |
-| Persistencia local | localStorage | `useLocalStorage.ts` hook |
+| Local to a component (e.g. input value) | Inside the component | `useState` |
+| Shared within an organism (e.g. list of messages) | Reusable hook | `useChat.ts` |
+| App-wide (e.g. theme, authentication) | Context API | `ChatContext.tsx` |
+| Local persistence | localStorage | `useLocalStorage.ts` hook |
 
-**No usar:**
-- Redux/Zustand (overkill para este proyecto).
-- Props drilling (3+ niveles → Context o hook).
+**Don't use:**
+- Redux/Zustand (overkill for this project).
+- Prop drilling (3+ levels → Context or a hook).
 
 ### 4.4 Styling
 
-- **CSS Modules:** uno por componente, sin conflictos globales.
+- **CSS Modules:** one per component, no global conflicts.
 - **BEM:** `.Button`, `.Button__text`, `.Button--primary`.
-- **Acceso a clases del módulo:** siempre con notación de corchetes `styles["className"]` (o
-  `styles[\`block--${modifier}\`]` para modifiers dinámicos). No usar notación de punto
-  (`styles.className`) — así todas las referencias tienen la misma forma, estáticas y
-  dinámicas.
-- **No inline styles:** mantener en archivo `.module.css`.
-- **Variables CSS globales:** definir en `src/app/styles/global.css`, reutilizar:
+- **Accessing module classes:** always with bracket notation `styles["className"]` (or
+  `styles[\`block--${modifier}\`]` for dynamic modifiers). Don't use dot notation
+  (`styles.className`) — that way every reference has the same shape, static and
+  dynamic alike.
+- **No inline styles:** keep them in the `.module.css` file.
+- **Global CSS variables:** define them in `src/app/styles/global.css` and reuse them:
   ```css
   :root {
     --color-primary: #007bff;
@@ -506,7 +506,7 @@ export interface ComponentProps {
     --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  /* En componente */
+  /* In a component */
   .button {
     background-color: var(--color-primary);
     padding: var(--spacing-unit);
@@ -515,7 +515,7 @@ export interface ComponentProps {
 
 ### 4.5 Documentation
 
-Cada atom/molecule documenta su uso con JSDoc:
+Every atom/molecule documents its usage with JSDoc:
 
 ```tsx
 /**
@@ -535,7 +535,7 @@ export const Button: React.FC<ButtonProps> = (...) => ...;
 
 ## 5. Directory Structure
 
-**Corrected 2026-09-27 (`add-app`)**: no `__tests__/` tree — every file with behavior gets a
+**Corrected 2026-09-27 (`add-app`)**: no `__tests__/` tree — every file with behaviour gets a
 colocated `*.test.ts(x)` right beside it, per `docs/code-conventions.md`. No `index.ts` barrel (the
 `@app/*` alias resolves paths directly) and no `App.tsx`/`App.css` (`docs/code-conventions.md`
 allows exactly one file at a module root, the entry point — `main.tsx` mounts `ChatProvider` +
@@ -628,19 +628,19 @@ module's `hooks/` root since nothing else needs a nested one yet.
 
 ### Per Level
 
-| Nivel | Tipo de Test | Tool | Ejemplo |
+| Level | Test type | Tool | Example |
 |---|---|---|---|
-| Atoms | Snapshot + functional | Vitest | Button renders con variant correcto |
-| Molecules | Functional + integration | Vitest + @testing-library/react | SearchBar dispara onSubmit al hacer click |
-| Organisms | Integration + behavior | Vitest + @testing-library/react | ChatPanel agrega mensaje al historial |
-| Pages | E2E (manual o Playwright) | Manual o Playwright | Flujo completo: pregunta → respuesta |
+| Atoms | Snapshot + functional | Vitest | Button renders with the correct variant |
+| Molecules | Functional + integration | Vitest + @testing-library/react | SearchBar fires onSubmit on click |
+| Organisms | Integration + behaviour | Vitest + @testing-library/react | ChatPanel adds a message to the history |
+| Pages | E2E (manual or Playwright) | Manual or Playwright | Full flow: question → answer |
 
 ### Mocking
 
-- **Atoms:** no requieren mocks (standalone).
-- **Molecules:** mock atoms si es necesario (raro).
+- **Atoms:** need no mocks (standalone).
+- **Molecules:** mock atoms if needed (rare).
 - **Organisms:** mock hooks (`useQuery`, `useHistory`).
-- **Pages:** mock agents, contextos.
+- **Pages:** mock agents and contexts.
 
 ---
 
@@ -648,24 +648,24 @@ module's `hooks/` root since nothing else needs a nested one yet.
 
 | Pitfall | Problem | Solution |
 |---|---|---|
-| "Atomic creep" — cada pequeña cosa es un atom | Proliferación de componentes tiny | Si menos de 2 líneas, inline en molecule. |
-| Props drilling profundo | Page → Organism → Molecule → Atom | Usar Context para estado compartido. |
-| Lógica de negocio en atoms | Atoms pierden reusabilidad | Atoms sin lógica; lógica en hooks/organisms. |
-| Styling global conflictante | CSS specificity wars | CSS Modules siempre; variables CSS para tema. |
-| Tester crea otro Button porque no encontró el atom | Duplicación | Storybook/documentation bien visible. |
+| "Atomic creep" — every little thing becomes an atom | Proliferation of tiny components | If it's under 2 lines, inline it in the molecule. |
+| Deep prop drilling | Page → Organism → Molecule → Atom | Use Context for shared state. |
+| Business logic in atoms | Atoms lose reusability | Logic-free atoms; logic lives in hooks/organisms. |
+| Conflicting global styling | CSS specificity wars | Always CSS Modules; CSS variables for theming. |
+| A tester creates another Button because they couldn't find the atom | Duplication | Clearly visible Storybook/documentation. |
 | Raw HTML in molecules/organisms | Violates the single abstraction layer rule | Always wrap in Atoms; lint or code-review for violations. |
 
 ---
 
 ## 8. Evolution & Maintenance
 
-Conforme crece la UI:
-1. **New atoms** — agregar bajo `ui/atoms/`, reutilizar en molecules existentes.
-2. **New molecules** — combinar atoms, agregar bajo `ui/molecules/`.
-3. **New organisms** — combinar molecules, agregar bajo `ui/organisms/`.
-4. **Refactoring** — si un organism crece mucho, extraer molecules internas.
+As the UI grows:
+1. **New atoms** — add them under `ui/atoms/` and reuse them in existing molecules.
+2. **New molecules** — combine atoms and add them under `ui/molecules/`.
+3. **New organisms** — combine molecules and add them under `ui/organisms/`.
+4. **Refactoring** — if an organism grows too large, extract its inner molecules.
 
-Este documento se actualiza con nuevos componentes comunes.
+This document is updated as new common components appear.
 
 ---
 
@@ -678,14 +678,14 @@ Este documento se actualiza con nuevos componentes comunes.
 
 ## 10. TLDR
 
-1. **Atoms** = primitivas, sin lógica, **únicos emitiendo raw HTML**. Ejemplos: Button, Input, Text, Container.
-2. **Molecules** = composiciones simples, **solo de atoms**. Ejemplos: SearchBar, ChatMessage.
-3. **Organisms** = secciones complejas con lógica, **solo de molecules y atoms**. Ejemplos: ChatPanel, SourcePanel.
-4. **Pages** = pantallas completas, **composición pura**. Ejemplo: ChatPage.
+1. **Atoms** = primitives, no logic, **the only ones emitting raw HTML**. Examples: Button, Input, Text, Container.
+2. **Molecules** = simple compositions, **of atoms only**. Examples: SearchBar, ChatMessage.
+3. **Organisms** = complex sections with logic, **of molecules and atoms only**. Examples: ChatPanel, SourcePanel.
+4. **Pages** = full screens, **pure composition**. Example: ChatPage.
 5. **NO raw HTML outside atoms** — enforce via linting or code review.
-6. **Directory = Hierarquía clara:** `src/app/ui/{atoms,molecules,organisms}/ComponentName/`.
-7. **CSS Modules + BEM** = estilos encapsulados.
-8. **Hooks = Lógica reutilizable** en `hooks/` o carpeta local del componente.
-9. **Context = Estado global** en `context/` si es necesario.
-10. **TypeScript + JSDoc = Documentación** en el código.
-11. **Test cada nivel** con estrategia apropiada.
+6. **Directory = clear hierarchy:** `src/app/ui/{atoms,molecules,organisms}/ComponentName/`.
+7. **CSS Modules + BEM** = encapsulated styles.
+8. **Hooks = reusable logic** in `hooks/` or the component's local folder.
+9. **Context = global state** in `context/` if needed.
+10. **TypeScript + JSDoc = documentation** in the code.
+11. **Test every level** with the appropriate strategy.
