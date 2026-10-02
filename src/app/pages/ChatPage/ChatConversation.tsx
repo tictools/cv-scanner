@@ -1,5 +1,5 @@
 import { useScannerChat } from "../../hooks/useScannerChat";
-import { latestAnsweredSources } from "../../sources/latest-answered-sources";
+import { displayedSources } from "../../sources/displayed-sources";
 import { ChatPanel } from "../../ui/organisms/ChatPanel/ChatPanel";
 import { SourcePanel } from "../../ui/organisms/SourcePanel/SourcePanel";
 
@@ -26,7 +26,7 @@ export const ChatConversation = ({ sessionId }: ChatConversationProps) => {
   return (
     <>
       <ChatPanel messages={messages} state={state} onAsk={ask} />
-      <SourcePanel sources={latestAnsweredSources(messages)} />
+      <SourcePanel sources={displayedSources({ messages, state })} />
     </>
   );
 };

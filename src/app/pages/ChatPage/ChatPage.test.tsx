@@ -113,6 +113,74 @@ describe("ChatPage", () => {
     expect(screen.getByRole("link", { name: "Jane Doe" }).getAttribute("href")).toBe("/cvs/jane-doe.pdf");
   });
 
+  it("keeps the previous turn's sources visible while the next turn streams, even after its retrieval resolves, and switches once streaming ends", () => {
+    const ask = vi.fn();
+    const firstUserMessage: UIMessage = { id: "u1", role: "user", parts: [{ type: "text", text: "Who knows React?" }] };
+    useScannerChatMock.mockReturnValue({
+      messages: [firstUserMessage, assistantMessageWithSources],
+      ask,
+      state: "idle",
+    });
+
+    const { rerender } = render(
+      <ChatProvider>
+        <ChatPage />
+      </ChatProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "Jane Doe" })).toBeTruthy();
+
+    const secondUserMessage: UIMessage = { id: "u2", role: "user", parts: [{ type: "text", text: "Who knows Go?" }] };
+    const secondAssistantMessageWithSources: UIMessage = {
+      id: "msg-4",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-scan-cv",
+          toolCallId: "call-2",
+          state: "output-available",
+          input: { query: "go" },
+          output: [
+            {
+              candidateId: "john-smith",
+              candidateName: "John Smith",
+              source: "data/cvs/john-smith.pdf",
+              content: "y",
+              score: 0.7,
+            },
+          ],
+        } as UIMessage["parts"][number],
+      ],
+    };
+    useScannerChatMock.mockReturnValue({
+      messages: [firstUserMessage, assistantMessageWithSources, secondUserMessage, secondAssistantMessageWithSources],
+      ask,
+      state: "streaming",
+    });
+    rerender(
+      <ChatProvider>
+        <ChatPage />
+      </ChatProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "Jane Doe" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "John Smith" })).toBeNull();
+
+    useScannerChatMock.mockReturnValue({
+      messages: [firstUserMessage, assistantMessageWithSources, secondUserMessage, secondAssistantMessageWithSources],
+      ask,
+      state: "idle",
+    });
+    rerender(
+      <ChatProvider>
+        <ChatPage />
+      </ChatProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "John Smith" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Jane Doe" })).toBeNull();
+  });
+
   it("reload: mounting with a replayed history re-derives the latest answer's cited CVs", () => {
     const userMessage: UIMessage = { id: "u1", role: "user", parts: [{ type: "text", text: "Who knows React?" }] };
     useScannerChatMock.mockReturnValue({
