@@ -20,5 +20,5 @@ export interface HeadingProps {
 export const Heading = ({ children, level = 1, className = "" }: HeadingProps) => {
   const Tag = `h${level}` as const;
 
-  return <Tag className={classNames(styles.heading, className)}>{children}</Tag>;
+  return <Tag className={classNames(styles["heading"], className)}>{children}</Tag>;
 };

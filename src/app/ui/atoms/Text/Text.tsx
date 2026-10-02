@@ -18,5 +18,5 @@ export interface TextProps {
  * ```
  */
 export const Text = ({ children, variant = "normal", className = "" }: TextProps) => (
-  <p className={classNames(styles.text, styles[`text--${variant}`], className)}>{children}</p>
+  <p className={classNames(styles["text"], styles[`text--${variant}`], className)}>{children}</p>
 );

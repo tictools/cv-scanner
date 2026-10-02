@@ -32,7 +32,7 @@ export const Button = ({
     type={type}
     onClick={onClick}
     disabled={disabled}
-    className={classNames(styles.button, styles[`button--${variant}`], className)}
+    className={classNames(styles["button"], styles[`button--${variant}`], className)}
   >
     {children}
   </button>

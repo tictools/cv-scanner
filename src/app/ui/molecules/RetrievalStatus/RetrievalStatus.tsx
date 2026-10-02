@@ -27,7 +27,7 @@ export const RetrievalStatus = ({ part }: RetrievalStatusProps) => {
   }
 
   return (
-    <Container className={styles.retrievalStatus}>
+    <Container className={styles["retrievalStatus"]}>
       <Spinner label={LABEL} />
       <Text variant="muted">{LABEL}</Text>
     </Container>

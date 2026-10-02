@@ -16,5 +16,5 @@ export interface SpinnerProps {
  * ```
  */
 export const Spinner = ({ label, className = "" }: SpinnerProps) => (
-  <span role="status" aria-label={label} className={classNames(styles.spinner, className)} />
+  <span role="status" aria-label={label} className={classNames(styles["spinner"], className)} />
 );

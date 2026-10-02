@@ -42,7 +42,7 @@ En cv-scanner, los componentes viven bajo `src/app/ui/` y se dividen en estas ca
 // SearchBar.tsx (MOLECULE) — VIOLATES RULE
 export const SearchBar: React.FC<SearchBarProps> = ({ onSubmit }) => {
   return (
-    <div className={styles.searchBar}>  // ← raw HTML, not allowed in molecules
+    <div className={styles["searchBar"]}>  // ← raw HTML, not allowed in molecules
       <Input onSubmit={onSubmit} />
       <Button>Search</Button>
     </div>
@@ -56,11 +56,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSubmit }) => {
 export const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`${styles.container} ${className}`}>{children}</div>;
+}) => <div className={`${styles["container"]} ${className}`}>{children}</div>;
 
 // molecules/SearchBar.tsx
 export const SearchBar: React.FC<SearchBarProps> = ({ onSubmit }) => (
-  <Container className={styles.searchBar}>  // ← Atom, allowed
+  <Container className={styles["searchBar"]}>  // ← Atom, allowed
     <Input onSubmit={onSubmit} />
     <Button>Search</Button>
   </Container>
@@ -159,7 +159,7 @@ export const Button: React.FC<ButtonProps> = ({
     type={type}
     onClick={onClick}
     disabled={disabled}
-    className={`${styles.button} ${styles[`button--${variant}`]} ${className}`}
+    className={`${styles["button"]} ${styles[`button--${variant}`]} ${className}`}
   >
     {children}
   </button>
@@ -259,7 +259,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <Container className={styles.searchBar}>
+    <Container className={styles["searchBar"]}>
       <Input
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -369,8 +369,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   return (
-    <Container className={styles.chatPanel}>
-      <Container className={styles.messageList}>
+    <Container className={styles["chatPanel"]}>
+      <Container className={styles["messageList"]}>
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
@@ -425,7 +425,7 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <Container className={styles.chatPage}>
+    <Container className={styles["chatPage"]}>
       <ChatPanel onQuerySubmit={handleQuerySubmit} isLoading={isLoading} />
       <SourcePanel sources={sources} />
     </Container>
@@ -492,6 +492,10 @@ export interface ComponentProps {
 
 - **CSS Modules:** uno por componente, sin conflictos globales.
 - **BEM:** `.Button`, `.Button__text`, `.Button--primary`.
+- **Acceso a clases del módulo:** siempre con notación de corchetes `styles["className"]` (o
+  `styles[\`block--${modifier}\`]` para modifiers dinámicos). No usar notación de punto
+  (`styles.className`) — así todas las referencias tienen la misma forma, estáticas y
+  dinámicas.
 - **No inline styles:** mantener en archivo `.module.css`.
 - **Variables CSS globales:** definir en `src/app/styles/global.css`, reutilizar:
   ```css

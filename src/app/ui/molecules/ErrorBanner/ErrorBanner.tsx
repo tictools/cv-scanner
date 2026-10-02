@@ -17,7 +17,7 @@ export interface ErrorBannerProps {
  * ```
  */
 export const ErrorBanner = ({ message }: ErrorBannerProps) => (
-  <Container className={styles.errorBanner} role="alert">
+  <Container className={styles["errorBanner"]} role="alert">
     <Badge variant="error">Error</Badge>
     <Text>{message}</Text>
   </Container>

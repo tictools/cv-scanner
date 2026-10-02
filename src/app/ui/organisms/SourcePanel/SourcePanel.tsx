@@ -20,14 +20,14 @@ export interface SourcePanelProps {
  * ```
  */
 export const SourcePanel = ({ sources }: SourcePanelProps) => (
-  <Container className={styles.sourcePanel}>
-    <Heading level={2} className={styles.sourcePanel__title}>
+  <Container className={styles["sourcePanel"]}>
+    <Heading level={2} className={styles["sourcePanel__title"]}>
       Cited CVs
     </Heading>
     {!sources || sources.length === 0 ? (
       <Text variant="muted">No CVs have been cited yet.</Text>
     ) : (
-      <Container className={styles.sourceList}>
+      <Container className={styles["sourceList"]}>
         {sources.map((source) => (
           <SourceEntry key={source.candidateId} source={source} />
         ))}

@@ -23,8 +23,8 @@ export const ChatPage = () => {
   const { sessionId, startNewConversation } = useChatSession();
 
   return (
-    <Container className={styles.chatPage}>
-      <Container className={styles.header}>
+    <Container className={styles["chatPage"]}>
+      <Container className={styles["header"]}>
         <Button variant="secondary" onClick={startNewConversation}>
           New conversation
         </Button>

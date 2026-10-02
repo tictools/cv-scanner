@@ -18,7 +18,7 @@ export interface LinkProps {
  * ```
  */
 export const Link = ({ href, children, className = "" }: LinkProps) => (
-  <a href={href} target="_blank" rel="noreferrer" className={classNames(styles.link, className)}>
+  <a href={href} target="_blank" rel="noreferrer" className={classNames(styles["link"], className)}>
     {children}
   </a>
 );

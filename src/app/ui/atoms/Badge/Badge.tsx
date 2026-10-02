@@ -18,5 +18,5 @@ export interface BadgeProps {
  * ```
  */
 export const Badge = ({ children, variant = "neutral", className = "" }: BadgeProps) => (
-  <span className={classNames(styles.badge, styles[`badge--${variant}`], className)}>{children}</span>
+  <span className={classNames(styles["badge"], styles[`badge--${variant}`], className)}>{children}</span>
 );

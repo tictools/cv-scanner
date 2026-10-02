@@ -28,6 +28,6 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, disabled = fals
     onKeyDown={onKeyDown}
     placeholder={placeholder}
     disabled={disabled}
-    className={classNames(styles.input, className)}
+    className={classNames(styles["input"], className)}
   />
 );

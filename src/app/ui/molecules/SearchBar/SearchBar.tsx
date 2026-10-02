@@ -33,7 +33,7 @@ export const SearchBar = ({ onSubmit, disabled = false }: SearchBarProps) => {
   };
 
   return (
-    <Container className={styles.searchBar}>
+    <Container className={styles["searchBar"]}>
       <Input
         value={question}
         onChange={setQuestion}

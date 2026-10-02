@@ -33,7 +33,7 @@ export const Avatar = ({ src, name, className = "" }: AvatarProps) => {
 
   if (unavailable) {
     return (
-      <span role="img" aria-label={name} className={classNames(styles.avatar, styles["avatar--fallback"], className)}>
+      <span role="img" aria-label={name} className={classNames(styles["avatar"], styles["avatar--fallback"], className)}>
         {initialsOf(name)}
       </span>
     );
@@ -43,7 +43,7 @@ export const Avatar = ({ src, name, className = "" }: AvatarProps) => {
     <img
       src={src}
       alt={name}
-      className={classNames(styles.avatar, className)}
+      className={classNames(styles["avatar"], className)}
       onError={() => setUnavailable(true)}
     />
   );
