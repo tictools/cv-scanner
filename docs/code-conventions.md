@@ -126,6 +126,13 @@ empty name (`common`, `shared`, `misc`, `lib`). `generators/fs-utils.ts` is not 
 `fileExists`. If the only name on offer is one of those, the grouping is wrong: name the real
 concern, or keep the function next to its only caller.
 
+**One exception: `src/shared/`.** Cross-module code lives under `src/shared/`, a top-level
+sibling of the four modules (decided 2026-10-02, issue #9 — full rules in
+[architecture.md §2.1](architecture.md#21-srcshared--cross-module-code-decided-2026-10-02-issue-9)).
+The exception covers only that one directory name at that one position. Inside it, the rule above
+applies unchanged: code lives in a directory named for its concern (`src/shared/env/`, never
+`src/shared/utils/` or a loose `src/shared/env.ts`).
+
 ### What stays at a root
 
 - The module entrypoint (`src/feed/index.ts`, what `generate:cvs` runs). It is the boundary

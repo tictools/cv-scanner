@@ -32,11 +32,13 @@ From `CHALLENGE.md`:
   ├── feed/        # CV generation pipeline (data generation)
   ├── rag/         # ingestion + retrieval: PDF text extraction, chunking, embeddings, vector search
   ├── agent/       # orchestration: question + retrieved context → grounded answer + sources
-  └── app/         # frontend / chat UI
+  ├── app/         # frontend / chat UI
+  └── shared/      # not a module: runtime-agnostic code more than one module needs (see §2.1)
 ```
 
 Four modules in a pipeline, each independently designed/documented and loosely coupled through
-`data/` and narrow interfaces — not through shared runtime code:
+`data/` and narrow interfaces — not through shared runtime code (the module-agnostic helpers in
+`src/shared/`, §2.1, are the only exception, and carry no module behavior):
 
 ```
 feed ──writes──▶ data/ (PDFs, manifest.json)
@@ -84,6 +86,49 @@ keeps each module replaceable/rewriteable independently — external API access 
 provider) should stay isolated behind a thin `client/` wrapper per module rather than shared across
 them.
 
+### 2.1 `src/shared/` — cross-module code (decided 2026-10-02, issue #9)
+
+`src/shared/` is the **one** sanctioned home for code that more than one module needs and that
+would otherwise be duplicated. It is not a fifth module: it has no entrypoint, no `pnpm` script, and
+no behavior of its own — modules call into it, it never calls into a module. It exists because
+`feed`, `rag`, and `agent` each reimplemented the same "read a required environment variable, trim
+it, fail fast with a message naming it" logic with drifting error messages
+([issue #9](https://github.com/tictools/cv-scanner/issues/9)).
+
+Rules for anything placed under `src/shared/`:
+
+- **Runtime-agnostic.** It must run unchanged under Node (`feed`, `rag`, `tsx`, Vitest), the
+  Cloudflare Workers runtime (`agent`, `wrangler dev`), and the browser (`app`). So no `process`,
+  no `NodeJS.*` types, no `cloudflare:` imports, no DOM globals. Runtime-specific inputs (e.g.
+  `process.env` vs. the Worker's `env` binding) are passed in as parameters by the calling module.
+- **No imports from `src/feed|rag|agent|app`.** Dependencies point one way: module → shared.
+- **No third-party dependencies** unless every importing runtime can bundle them.
+- **Still no generic buckets inside it.** `shared` is the only generic name allowed, and only at
+  this one top-level position; inside it, code lives in a directory named for its concern
+  (`src/shared/env/`), per [code-conventions.md](code-conventions.md#no-loose-files).
+- **Earned, not speculative.** Code moves here when a second module actually needs it, mirroring
+  the "constants stay private unless another file needs them" rule. Module-specific policy stays in
+  the module: each module keeps a thin wrapper that supplies its own runtime input and its own
+  command hint.
+
+Current contents:
+
+- `src/shared/env/require-env-var.ts` — `requireEnvVar({ env, name, command })`: trims the value,
+  treats blank as missing, and throws the single canonical message
+  `Missing required environment variable: <NAME>. Set it in a local .env file before running <command>.`
+- `src/shared/env/upstash-credentials.ts` — the `UpstashCredentials` type and
+  `requireUpstashCredentials({ env, command })`, built on `requireEnvVar`.
+
+Callers: `feed/env/gemini-api-key.ts` (`process.env`, `pnpm generate:cvs`),
+`rag/env/upstash-credentials.ts` (`process.env`, `pnpm ingest:cvs`), and `agent/env/agent-env.ts`
+(the Worker `env` binding, `pnpm dev:agent`). `rag` and `agent` both validate the Upstash pair
+through the same shared `requireUpstashCredentials`. The difference is *when*: the `agent-tools`
+spec requires missing Upstash credentials to surface as a `scan-cv` tool error, not as an exception
+thrown before the chat turn starts. So `ScannerAgent` hands the tools a resolver
+(`resolveCredentials: () => requireUpstashCredentials(this.env)`), and `scan-cv` calls it inside the
+same `try` that turns a failing `retrieve` into an `{ error }` result. `OPENAI_API_KEY` is still
+validated eagerly, since the model can't be built without it.
+
 ## 3. Cross-cutting decisions (made so far)
 
 - **LLM provider**: Gemini (Google AI Studio, free tier), single key, used for both text and
@@ -96,7 +141,8 @@ them.
   `data/` (not under `src/`, since it's data, not code).
 - **Import path aliases**: intra-repo imports use fixed aliases rooted at each module and at the
   data directory — `@feed/*` → `src/feed/*`, `@rag/*` → `src/rag/*`, `@agent/*` → `src/agent/*`,
-  `@app/*` → `src/app/*`, `@data/*` → `data/*` — never deep relative chains (`../../`). Declared
+  `@app/*` → `src/app/*`, `@shared/*` → `src/shared/*` (§2.1), `@data/*` → `data/*` — never deep
+  relative chains (`../../`). Declared
   in `tsconfig.json` (`compilerOptions.paths`), which is compile-time only: the dev/test runners
   must resolve the same aliases at runtime (Vitest via its config, a TS runner such as `tsx` for
   scripts). Aliases don't change module coupling: cross-module imports still only happen through

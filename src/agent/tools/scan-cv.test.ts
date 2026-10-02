@@ -76,10 +76,13 @@ describe("createScanCVTool", () => {
     });
   });
 
-  it("passes the given credentials through to retrieve", async () => {
+  it("resolves credentials when executed and passes them through to retrieve", async () => {
     mockRetrieve.mockResolvedValue([]);
     const credentials = { url: "https://example.upstash.io", token: "token" };
-    const scanCVTool = createScanCVTool({ credentials });
+    const resolveCredentials = vi.fn(() => credentials);
+    const scanCVTool = createScanCVTool({ resolveCredentials });
+
+    expect(resolveCredentials).not.toHaveBeenCalled();
 
     await scanCVTool.execute!({ query: "backend engineer" }, TOOL_EXECUTION_OPTIONS);
 
@@ -87,6 +90,20 @@ describe("createScanCVTool", () => {
       topK: DEFAULT_TOP_K,
       credentials,
     });
+  });
+
+  it("returns a throwing credentials resolver as an { error } result instead of rethrowing", async () => {
+    mockRetrieve.mockReset();
+    const scanCVTool = createScanCVTool({
+      resolveCredentials: () => {
+        throw new Error("Missing required environment variable: UPSTASH_VECTOR_REST_URL.");
+      },
+    });
+
+    const result = await scanCVTool.execute!({ query: "backend engineer" }, TOOL_EXECUTION_OPTIONS);
+
+    expect(result).toEqual({ error: "Missing required environment variable: UPSTASH_VECTOR_REST_URL." });
+    expect(mockRetrieve).not.toHaveBeenCalled();
   });
 
   it("returns an empty result set rather than an error when the index has no match", async () => {

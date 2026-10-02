@@ -1,6 +1,6 @@
 import { AIChatAgent } from "@cloudflare/ai-chat";
 import { createLlmClient } from "../clients/llm-client";
-import { requireOpenAiApiKey, upstashCredentialsFromEnv, type Env } from "../env/agent-env";
+import { requireOpenAiApiKey, requireUpstashCredentials, type Env } from "../env/agent-env";
 import { streamAgent } from "../orchestration/query";
 
 export class ScannerAgent extends AIChatAgent<Env> {
@@ -10,7 +10,7 @@ export class ScannerAgent extends AIChatAgent<Env> {
     const result = await streamAgent({
       model,
       messages: this.messages,
-      credentials: upstashCredentialsFromEnv(this.env),
+      resolveCredentials: () => requireUpstashCredentials(this.env),
     });
 
     return result.toUIMessageStreamResponse();
