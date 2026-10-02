@@ -16,7 +16,7 @@ export interface SourcePanelProps {
  *
  * @example
  * ```tsx
- * <SourcePanel sources={latestAnsweredSources(messages)} />
+ * <SourcePanel sources={displayedSources({ messages, state })} />
  * ```
  */
 export const SourcePanel = ({ sources }: SourcePanelProps) => (
