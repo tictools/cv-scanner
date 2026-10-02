@@ -2,6 +2,8 @@ import { isTextUIPart, isToolUIPart, type UIMessage } from "ai";
 import { Container } from "../../atoms/Container/Container";
 import { Heading } from "../../atoms/Heading/Heading";
 import { Markdown } from "../../atoms/Markdown/Markdown";
+import { RenderOrFallback } from "../../atoms/RenderOrFallback/RenderOrFallback";
+import { RenderOrNull } from "../../atoms/RenderOrNull/RenderOrNull";
 import { Text } from "../../atoms/Text/Text";
 import { classNames } from "../../classnames/classNames";
 import { RetrievalStatus } from "../RetrievalStatus/RetrievalStatus";
@@ -34,18 +36,18 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         </Heading>
         {message.parts.map((part, index) => {
           if (isTextUIPart(part)) {
-            return isUser ? (
-              <Text key={`text-${index}`}>{part.text}</Text>
-            ) : (
-              <Markdown key={`text-${index}`}>{part.text}</Markdown>
+            return (
+              <RenderOrFallback key={`text-${index}`} shouldRender={isUser} fallback={<Markdown>{part.text}</Markdown>}>
+                <Text>{part.text}</Text>
+              </RenderOrFallback>
             );
           }
 
-          if (isToolUIPart(part)) {
-            return <RetrievalStatus key={`tool-${index}`} part={part} />;
-          }
-
-          return null;
+          return (
+            <RenderOrNull key={`tool-${index}`} shouldRender={isToolUIPart(part)}>
+              <RetrievalStatus part={part} />
+            </RenderOrNull>
+          );
         })}
       </Container>
     </Container>

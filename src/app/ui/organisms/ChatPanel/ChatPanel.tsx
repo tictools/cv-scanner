@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import type { ScannerChatState } from "../../../hooks/useScannerChat";
 import { Container } from "../../atoms/Container/Container";
+import { RenderOrNull } from "../../atoms/RenderOrNull/RenderOrNull";
 import { Spinner } from "../../atoms/Spinner/Spinner";
 import { ChatMessage } from "../../molecules/ChatMessage/ChatMessage";
 import { ErrorBanner } from "../../molecules/ErrorBanner/ErrorBanner";
@@ -29,8 +30,12 @@ export const ChatPanel = ({ messages, state, onAsk }: ChatPanelProps) => (
         <ChatMessage key={message.id} message={message} />
       ))}
     </Container>
-    {state === "streaming" && <Spinner label="answering" />}
-    {state === "error" && <ErrorBanner message="The assistant cannot be reached." />}
+    <RenderOrNull shouldRender={state === "streaming"}>
+      <Spinner label="answering" />
+    </RenderOrNull>
+    <RenderOrNull shouldRender={state === "error"}>
+      <ErrorBanner message="The assistant cannot be reached." />
+    </RenderOrNull>
     <SearchBar onSubmit={onAsk} disabled={state === "streaming"} />
   </Container>
 );

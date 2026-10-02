@@ -1,6 +1,7 @@
 import { getToolPartState } from "@cloudflare/ai-chat/react";
 import type { UIMessage } from "ai";
 import { Container } from "../../atoms/Container/Container";
+import { RenderOrNull } from "../../atoms/RenderOrNull/RenderOrNull";
 import { Spinner } from "../../atoms/Spinner/Spinner";
 import { Text } from "../../atoms/Text/Text";
 import styles from "./RetrievalStatus.module.css";
@@ -21,15 +22,11 @@ export interface RetrievalStatusProps {
  * <RetrievalStatus part={toolPart} />
  * ```
  */
-export const RetrievalStatus = ({ part }: RetrievalStatusProps) => {
-  if (!PENDING_STATES.has(getToolPartState(part))) {
-    return null;
-  }
-
-  return (
+export const RetrievalStatus = ({ part }: RetrievalStatusProps) => (
+  <RenderOrNull shouldRender={PENDING_STATES.has(getToolPartState(part))}>
     <Container className={styles["retrievalStatus"]}>
       <Spinner label={LABEL} />
       <Text variant="muted">{LABEL}</Text>
     </Container>
-  );
-};
+  </RenderOrNull>
+);
