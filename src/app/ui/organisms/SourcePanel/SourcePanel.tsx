@@ -2,6 +2,7 @@ import type { SourceReference } from "@agent/extraction/extract-sources";
 import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { Container } from "../../atoms/Container/Container";
 import { Heading } from "../../atoms/Heading/Heading";
+import { RenderOrFallback } from "../../atoms/RenderOrFallback/RenderOrFallback";
 import { Text } from "../../atoms/Text/Text";
 import { SourceEntry } from "../../molecules/SourceEntry/SourceEntry";
 import styles from "./SourcePanel.module.css";
@@ -24,14 +25,15 @@ export const SourcePanel = ({ sources }: SourcePanelProps) => (
     <Heading level={2} className={styles["sourcePanel__title"]}>
       Cited CVs
     </Heading>
-    {!sources || sources.length === 0 ? (
-      <Text variant="muted">No CVs have been cited yet.</Text>
-    ) : (
+    <RenderOrFallback
+      shouldRender={(sources?.length ?? 0) > 0}
+      fallback={<Text variant="muted">No CVs have been cited yet.</Text>}
+    >
       <Container className={styles["sourceList"]}>
-        {sources.map((source) => (
+        {sources?.map((source) => (
           <SourceEntry key={source.candidateId} source={source} />
         ))}
       </Container>
-    )}
+    </RenderOrFallback>
   </Container>
 );

@@ -531,6 +531,61 @@ Every atom/molecule documents its usage with JSDoc:
 export const Button: React.FC<ButtonProps> = (...) => ...;
 ```
 
+### 4.6 Conditional Rendering: `RenderOrNull` / `RenderOrFallback`
+
+**Added 2026-10-02 (issue #18).** Two design-system render helpers live under `ui/atoms/`. They
+are view-layer vocabulary for conditional paint, not product components. They emit no DOM and
+have no CSS. Use them so a render tree reads as composition, not as `if`/`else` blocks or dense
+ternaries:
+
+| Helper | Contract |
+| --- | --- |
+| `RenderOrNull` | `shouldRender: boolean` + `children` → paints `children` or nothing |
+| `RenderOrFallback` | `shouldRender: boolean` + `children` + `fallback: ReactNode` → paints `children` or `fallback` |
+
+```tsx
+<RenderOrFallback shouldRender={isUser} fallback={<Markdown>{text}</Markdown>}>
+  <Text>{text}</Text>
+</RenderOrFallback>
+
+<RenderOrNull shouldRender={state === "error"}>
+  <ErrorBanner message="The assistant cannot be reached." />
+</RenderOrNull>
+```
+
+**Performance / evaluation contract (non-negotiable).** The helpers are ordinary components, so
+both sides are evaluated as **arguments** before the helper decides which one to paint:
+
+- **OK: a component on the side that isn't painted.** Its element is created (`createElement`
+  runs for both sides), but React only mounts the branch the helper returns. The discarded
+  component's body, hooks and effects never run.
+- **Not OK: eager work inside the JSX on the side that isn't painted.** Expressions such as
+  `transform(x)`, `list.map(...)` or fresh allocations run before the helper does, whatever
+  `shouldRender` says. The same goes for work that is only *valid* on the painted side, like
+  dereferencing a value that may be `null` there. In those cases, keep a ternary or `&&` (real
+  short-circuit), or move the work into a component so it only runs when mounted.
+  (`SourcePanel` maps `sources?.map(...)` inside `RenderOrFallback`. That is acceptable only
+  because the map is a no-op exactly when the list is discarded.)
+- **No lazy APIs.** Don't add `() => ReactNode` render-prop variants unless a real call site
+  needs one. The API stays boolean + nodes for DS clarity.
+- **Keys in lists.** When a helper is the root a `.map` callback returns, the `key` goes on the
+  **helper**, not only on the child inside it.
+
+Each atom's JSDoc restates this contract, so call sites see it on hover.
+
+**When to use them.** Use them for render-only branches: "paint A or B", "paint or nothing".
+Today that means `ChatMessage` (user text vs assistant Markdown; the tool part), `RetrievalStatus`
+(pending vs nothing), `SourcePanel` (empty state vs list) and `ChatPanel` (spinner; error banner).
+
+**When not to.** These stay as ordinary control flow:
+
+- Event and handler guards, e.g. `SearchBar`'s empty-submit and Enter-key checks.
+- Context and bootstrap throws (`chat-context`, `main.tsx`'s missing root).
+- Type-driven dispatch that relies on narrowing, e.g. `Markdown`'s `node.type` mapping, or the
+  `isTextUIPart` guard in `ChatMessage` that gives `part.text` its type.
+- Stateful roots that differ by element, e.g. `Avatar`'s image vs initials after `onError`.
+- Plain value choices that aren't render branches, e.g. `isUser ? "You" : "Assistant"`.
+
 ---
 
 ## 5. Directory Structure
@@ -592,6 +647,8 @@ src/app/
     │   ├── Spinner/
     │   ├── Link/
     │   ├── Avatar/                         # portrait + initials fallback
+    │   ├── RenderOrNull/                   # DS render helper: children or nothing (§4.6), no CSS
+    │   ├── RenderOrFallback/               # DS render helper: children or fallback (§4.6), no CSS
     │   └── Markdown/
     │       ├── Markdown.tsx                # blocks → elements (no dangerouslySetInnerHTML)
     │       ├── Markdown.module.css
@@ -654,6 +711,7 @@ module's `hooks/` root since nothing else needs a nested one yet.
 | Conflicting global styling | CSS specificity wars | Always CSS Modules; CSS variables for theming. |
 | A tester creates another Button because they couldn't find the atom | Duplication | Clearly visible Storybook/documentation. |
 | Raw HTML in molecules/organisms | Violates the single abstraction layer rule | Always wrap in Atoms; lint or code-review for violations. |
+| `RenderOrNull`/`RenderOrFallback` wrapping eager work | The discarded side's JSX expressions (`list.map`, `transform(x)`, a `null` dereference) still run | Keep `&&`/a ternary there, or move the work into a component (§4.6). |
 
 ---
 
