@@ -679,8 +679,9 @@ src/app/
         └── SourcePanel/
 ```
 
-No `services/` (a per-concern `sources/` directory replaced it), no `types/` (each type lives beside
-the code that defines it, e.g. `SourceReference` in `@agent/extraction/extract-sources`).
+No `services/` (a per-concern `sources/` directory replaced it), no `types/` (each `app` type lives
+beside the code that defines it). Types owned by `agent` are the exception: `app` imports them from
+`agent`'s own catalog, e.g. `SourceReference` from `@agent/types/sources`.
 `useScannerChat` stays at the module's `hooks/` root since every page/organism needing agent state
 shares it; `useChatScroll` lives in a component-local `hooks/` subfolder (`ChatPanel/hooks/`) since
 it is specific to that one organism (added with `add-new-message-indicator`, issue #17).

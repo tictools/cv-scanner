@@ -1,4 +1,4 @@
-import type { SourceReference } from "@agent/extraction/extract-sources";
+import type { SourceReference } from "@agent/types/sources";
 import { Avatar } from "../../atoms/Avatar/Avatar";
 import { Badge } from "../../atoms/Badge/Badge";
 import { Container } from "../../atoms/Container/Container";

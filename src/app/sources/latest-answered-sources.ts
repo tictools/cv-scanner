@@ -1,4 +1,4 @@
-import type { SourceReference } from "@agent/extraction/extract-sources";
+import type { SourceReference } from "@agent/types/sources";
 import type { UIMessage } from "ai";
 import type { Maybe, NonEmptyArray } from "@shared/ts/typeUtils/aliases";
 import { sourcesFromMessage } from "./message-sources";

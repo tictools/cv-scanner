@@ -149,6 +149,18 @@ src/feed/naming/slug.ts           the directory is the concern; the next naming 
 src/feed/generators/fs-utils.ts   forbidden: the name does not say what the file is
 ```
 
+## Exported types live in the module's `types/` catalog (`agent` only, for now)
+
+In `src/agent/`, every **exported** `type`/`interface` lives in `src/agent/types/<scope>.ts`
+(`turn`, `tools`, `sources`, `chunks`, `env`, `clients`, `audit`), and the code that uses it imports
+it from there (`../types/sources`; `app` uses `@agent/types/sources`). `types/` holds only type
+declarations: zod schemas and constants stay with their code, and a type derived from one is
+`z.infer<typeof Schema>` declared in `types/`. There is no `types/index.ts` barrel: importing by
+scope keeps the name of the concern visible at the import site. A type used by a single file and
+not exported stays in that file.
+
+Whether this becomes a repo-wide rule (`rag`, `feed`, `app`) is still open (issue #26).
+
 ## No magic numbers in tests
 
 Numeric literals that encode a real limit, threshold, count, or configuration value — not

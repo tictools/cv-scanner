@@ -9,7 +9,7 @@ vi.mock("@rag/retrieval/retrieve", () => ({
   retrieve: mockRetrieve,
 }));
 
-const { runAgent } = await import("./query");
+const { runTurn } = await import("./run-turn");
 const { SYSTEM_PROMPT } = await import("./system-prompt");
 
 const NULL_USAGE = {
@@ -60,7 +60,7 @@ describe("agent integration: question -> tool -> grounded answer + sources", () 
       ],
     });
 
-    const result = await runAgent({ model, messages: buildMessages("who knows FastAPI?") });
+    const result = await runTurn({ model, messages: buildMessages("who knows FastAPI?") });
 
     expect(mockRetrieve).toHaveBeenCalledWith("FastAPI", { topK: 5, credentials: undefined });
     expect(result.text).toBe("Nikita Crist has FastAPI experience.");
@@ -83,7 +83,7 @@ describe("agent integration: question -> tool -> grounded answer + sources", () 
       ],
     });
 
-    const result = await runAgent({ model, messages: buildMessages("who knows COBOL?") });
+    const result = await runTurn({ model, messages: buildMessages("who knows COBOL?") });
 
     expect(result.text).toBe("No candidate in the collection has COBOL experience.");
     expect(result.sources).toEqual([]);
@@ -94,7 +94,7 @@ describe("agent integration: question -> tool -> grounded answer + sources", () 
       doGenerate: [textStep("Sorry, that's outside what I cover — ask me about the CV collection.")],
     });
 
-    const result = await runAgent({ model, messages: buildMessages("what's the weather today?") });
+    const result = await runTurn({ model, messages: buildMessages("what's the weather today?") });
 
     expect(model.doGenerateCalls[0]?.prompt.find((message) => message.role === "system")?.content).toBe(
       SYSTEM_PROMPT,
@@ -123,7 +123,7 @@ describe("agent integration: question -> tool -> grounded answer + sources", () 
       ],
     });
 
-    const result = await runAgent({
+    const result = await runTurn({
       model,
       messages: buildMessages("which candidates know Python, and what salary should I offer?"),
     });

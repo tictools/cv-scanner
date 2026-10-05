@@ -1,27 +1,9 @@
-export interface SourceReference {
-  candidateId: string;
-  candidateName: string;
-  source: string;
-  score: number;
-}
+import { SCAN_CV_TOOL_NAME } from "../tools/scan-cv";
+import type { SourceReference } from "../types/sources";
+import type { ToolResultInput } from "../types/tools";
+import { isScanCVResultItems } from "./is-scan-cv-result-items";
 
-interface ScanCVResultItem {
-  candidateId: string;
-  candidateName: string;
-  source: string;
-  score: number;
-}
-
-export interface ToolResultInput {
-  toolName: string;
-  output: unknown;
-}
-
-const SCAN_CV_TOOL_NAME = "scan-cv";
-
-const isScanCVResultItems = (output: unknown): output is ScanCVResultItem[] => Array.isArray(output);
-
-export const extractSources = (toolResults: ToolResultInput[]): SourceReference[] => {
+export const extractScanCVSources = (toolResults: ToolResultInput[]): SourceReference[] => {
   const items = toolResults
     .filter((result) => result.toolName === SCAN_CV_TOOL_NAME)
     .flatMap((result) => (isScanCVResultItems(result.output) ? result.output : []));

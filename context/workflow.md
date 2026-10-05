@@ -32,7 +32,7 @@ flowchart LR
 | `pnpm dev:app` | Vite on `:5173`, proxies `/agents` to the Worker |
 
 `rag` never answers. `agent` never embeds. `app` never searches. The only shared code across a
-boundary is `extractSources` (`@agent/extraction/extract-sources`): server and UI both derive
+boundary is `extractScanCVSources` (`@agent/extraction/scan-cv-sources`): server and UI both derive
 cited CVs from `scan-cv` results, never from the model's sentences.
 
 ## Generation
@@ -73,7 +73,7 @@ rest still index.
 ## A question
 
 The model does not receive the corpus up front. It calls `scan-cv`, which is `retrieve(query, { topK })`.
-The streamed answer may only use that text. The source panel is `extractSources` over the same
+The streamed answer may only use that text. The source panel is `extractScanCVSources` over the same
 tool parts.
 
 ```mermaid
@@ -96,7 +96,7 @@ sequenceDiagram
     Agent->>Model: tool result
     Model-->>Agent: grounded answer
     Agent-->>App: stream plus tool parts
-    App->>App: extractSources
+    App->>App: extractScanCVSources
     App-->>User: answer and source panel
     User->>App: open a name
     App-->>User: /cvs/id.pdf

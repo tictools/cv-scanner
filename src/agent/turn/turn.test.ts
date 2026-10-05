@@ -10,7 +10,9 @@ vi.mock("@rag/retrieval/retrieve", () => ({
   retrieve: mockRetrieve,
 }));
 
-const { runAgent, streamAgent, DEFAULT_MAX_STEPS } = await import("./query");
+const { runTurn } = await import("./run-turn");
+const { streamTurn } = await import("./stream-turn");
+const { DEFAULT_MAX_STEPS } = await import("./turn-config");
 
 const NULL_USAGE = {
   inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
@@ -42,7 +44,7 @@ const buildMessages = (text: string) => [
   { id: "m1", role: "user" as const, parts: [{ type: "text" as const, text }] },
 ];
 
-describe("runAgent", () => {
+describe("runTurn", () => {
   it("returns { text, sources, toolCalls, retrievedChunks } for the tool-calling path", async () => {
     mockRetrieve.mockResolvedValue([
       {
@@ -60,7 +62,7 @@ describe("runAgent", () => {
       ],
     });
 
-    const result = await runAgent({ model, messages: buildMessages("who knows FastAPI?") });
+    const result = await runTurn({ model, messages: buildMessages("who knows FastAPI?") });
 
     expect(result.text).toBe("Nikita Crist has FastAPI experience.");
     expect(result.sources).toEqual([
@@ -90,7 +92,7 @@ describe("runAgent", () => {
       doGenerate: [textStep("Hello! Ask me about the candidates.")],
     });
 
-    const result = await runAgent({ model, messages: buildMessages("hello") });
+    const result = await runTurn({ model, messages: buildMessages("hello") });
 
     expect(result.text).toBe("Hello! Ask me about the candidates.");
     expect(result.sources).toEqual([]);
@@ -108,7 +110,7 @@ describe("runAgent", () => {
     });
     const maxSteps = 2;
 
-    await runAgent({ model, messages: buildMessages("who knows everything?"), maxSteps });
+    await runTurn({ model, messages: buildMessages("who knows everything?"), maxSteps });
 
     expect(calls).toBe(maxSteps);
   });
@@ -118,7 +120,7 @@ describe("runAgent", () => {
   });
 });
 
-describe("streamAgent and runAgent share configuration", () => {
+describe("streamTurn and runTurn share configuration", () => {
   it("send the same system prompt and tool set to the model", async () => {
     mockRetrieve.mockResolvedValue([]);
     const generateModel = new MockLanguageModelV4({ doGenerate: [textStep("hi")] });
@@ -140,8 +142,8 @@ describe("streamAgent and runAgent share configuration", () => {
       },
     });
 
-    await runAgent({ model: generateModel, messages: buildMessages("hello") });
-    const streamResult = await streamAgent({ model: streamModel, messages: buildMessages("hello") });
+    await runTurn({ model: generateModel, messages: buildMessages("hello") });
+    const streamResult = await streamTurn({ model: streamModel, messages: buildMessages("hello") });
     await streamResult.text;
 
     const generateCall = generateModel.doGenerateCalls[0];

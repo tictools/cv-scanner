@@ -1,4 +1,6 @@
-import { extractSources, type SourceReference, type ToolResultInput } from "@agent/extraction/extract-sources";
+import { extractScanCVSources } from "@agent/extraction/scan-cv-sources";
+import type { SourceReference } from "@agent/types/sources";
+import type { ToolResultInput } from "@agent/types/tools";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
 import type { Maybe } from "@shared/ts/typeUtils/aliases";
 
@@ -15,5 +17,5 @@ export const sourcesFromMessage = (message: UIMessage): SourceReference[] => {
     .map(toToolResult)
     .filter((result): result is ToolResultInput => result !== undefined);
 
-  return extractSources(toolResults);
+  return extractScanCVSources(toolResults);
 };
