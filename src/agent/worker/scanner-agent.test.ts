@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { ScannerAgent } from "./scanner-agent";
 
-const { mockCreateLlmClient, mockStreamAgent } = vi.hoisted(() => ({
+const { mockCreateLlmClient, mockStreamTurn } = vi.hoisted(() => ({
   mockCreateLlmClient: vi.fn(),
-  mockStreamAgent: vi.fn(),
+  mockStreamTurn: vi.fn(),
 }));
 
 vi.mock("@cloudflare/ai-chat", () => ({
@@ -14,16 +14,16 @@ vi.mock("../clients/llm-client", () => ({
   createLlmClient: mockCreateLlmClient,
 }));
 
-vi.mock("../orchestration/query", () => ({
-  streamAgent: mockStreamAgent,
+vi.mock("../turn/stream-turn", () => ({
+  streamTurn: mockStreamTurn,
 }));
 
 describe("ScannerAgent.onChatMessage", () => {
-  it("builds the model from the client seam and passes it, with this.messages, to streamAgent", async () => {
+  it("builds the model from the client seam and passes it, with this.messages, to streamTurn", async () => {
     const fakeModel = { modelId: "gpt-5.4-mini-2026-03-17" };
     mockCreateLlmClient.mockReturnValue(fakeModel);
     const fakeResponse = new Response("stream");
-    mockStreamAgent.mockResolvedValue({
+    mockStreamTurn.mockResolvedValue({
       toUIMessageStreamResponse: () => fakeResponse,
     });
     const messages = [{ id: "m1", role: "user" as const, parts: [{ type: "text" as const, text: "hi" }] }];
@@ -39,12 +39,12 @@ describe("ScannerAgent.onChatMessage", () => {
     const response = await ScannerAgent.prototype.onChatMessage.call(fakeThis);
 
     expect(mockCreateLlmClient).toHaveBeenCalledWith({ apiKey: "sk-test" });
-    expect(mockStreamAgent).toHaveBeenCalledWith({
+    expect(mockStreamTurn).toHaveBeenCalledWith({
       model: fakeModel,
       messages,
       resolveCredentials: expect.any(Function),
     });
-    expect(mockStreamAgent.mock.calls[0]![0].resolveCredentials()).toEqual({
+    expect(mockStreamTurn.mock.calls[0]![0].resolveCredentials()).toEqual({
       url: "https://example.upstash.io",
       token: "token",
     });
@@ -52,8 +52,8 @@ describe("ScannerAgent.onChatMessage", () => {
   });
 
   it("does not validate the Upstash pair up front, leaving a missing variable to surface as a tool error", async () => {
-    mockStreamAgent.mockReset();
-    mockStreamAgent.mockResolvedValue({ toUIMessageStreamResponse: () => new Response("stream") });
+    mockStreamTurn.mockReset();
+    mockStreamTurn.mockResolvedValue({ toUIMessageStreamResponse: () => new Response("stream") });
     const fakeThis = {
       env: { OPENAI_API_KEY: "sk-test", UPSTASH_VECTOR_REST_URL: "", UPSTASH_VECTOR_REST_TOKEN: "token" },
       messages: [],
@@ -61,10 +61,10 @@ describe("ScannerAgent.onChatMessage", () => {
 
     await ScannerAgent.prototype.onChatMessage.call(fakeThis);
 
-    expect(() => mockStreamAgent.mock.calls[0]![0].resolveCredentials()).toThrow(/UPSTASH_VECTOR_REST_URL/);
+    expect(() => mockStreamTurn.mock.calls[0]![0].resolveCredentials()).toThrow(/UPSTASH_VECTOR_REST_URL/);
   });
 
-  it("fails fast naming OPENAI_API_KEY when it is missing, before calling the client or streamAgent", async () => {
+  it("fails fast naming OPENAI_API_KEY when it is missing, before calling the client or streamTurn", async () => {
     const fakeThis = {
       env: {
         OPENAI_API_KEY: "",
@@ -78,6 +78,6 @@ describe("ScannerAgent.onChatMessage", () => {
       /OPENAI_API_KEY/,
     );
     expect(mockCreateLlmClient).not.toHaveBeenCalled();
-    expect(mockStreamAgent).not.toHaveBeenCalled();
+    expect(mockStreamTurn).not.toHaveBeenCalled();
   });
 });

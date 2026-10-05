@@ -77,9 +77,9 @@ The boundary between modules is **data and narrow interfaces**, not shared code:
 to `data/`; `rag` reads from `data/` (the manifest is a test/validation aid, not a runtime
 dependency); `agent` only calls `rag`'s retrieval interface; `app` only calls `agent`'s query
 interface (its chat protocol), with **one narrow, documented exception**: `app` also imports
-`agent`'s pure `extraction/extract-sources.ts` directly (`@agent/extraction/extract-sources`) so
-the "what counts as a cited CV" rule is defined once, not restated. That import may never reach for
-anything else in `agent` — in particular never `src/agent/index.ts` (the Worker entry), which
+`agent`'s pure `extraction/scan-cv-sources.ts` directly (`@agent/extraction/scan-cv-sources`) so
+the "what counts as a cited CV" rule is defined once, not restated, plus `agent`'s type-only
+catalog (`@agent/types/*`). Those imports may never reach for anything else in `agent` — in particular never `src/agent/index.ts` (the Worker entry), which
 would drag `agents` and the `cloudflare:` module scheme into the browser bundle
 ([openspec/changes/archive/2026-09-27-add-app/design.md](../openspec/changes/archive/2026-09-27-add-app/design.md) Decision 6). This
 keeps each module replaceable/rewriteable independently — external API access (e.g. the LLM
@@ -190,7 +190,7 @@ Resolved by the `add-agent` change; full rationale and alternatives considered i
 (how it connects: [context/workflow.md](../context/workflow.md)):
 
 - **Source indication**: mechanical, not model-generated. Sources are derived from the retrieval
-  tool's own results for the turn (`extraction/extract-sources.ts`), de-duplicated by candidate and
+  tool's own results for the turn (`extraction/scan-cv-sources.ts`), de-duplicated by candidate and
   sorted by score — never parsed out of the model's answer text, so a hallucinated citation is
   structurally impossible.
 - **Groundedness enforcement**: a system-prompt contract (answer only from tool results; admit when
@@ -222,7 +222,7 @@ Resolved by the `add-app` change; full rationale and alternatives considered in
   prose. The panel lists the most recent answered turn's candidates one per row, each showing the CV's
   generated portrait beside the candidate's name, the name linking to the generated PDF (both served
   by pointing Vite's `publicDir` at the repo's `data/`). Sources are *derived*, not transported: `app`
-  reuses `agent`'s own `extractSources` over the `tool-scan-cv` parts the stream already carries, so no
+  reuses `agent`'s own `extractScanCVSources` over the `tool-scan-cv` parts the stream already carries, so no
   citation can be hallucinated and no new data has to cross the wire.
 
 ## 5. Non-goals

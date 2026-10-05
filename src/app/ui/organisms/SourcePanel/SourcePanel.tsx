@@ -1,4 +1,4 @@
-import type { SourceReference } from "@agent/extraction/extract-sources";
+import type { SourceReference } from "@agent/types/sources";
 import type { Maybe } from "@shared/ts/typeUtils/aliases";
 import { Container } from "../../atoms/Container/Container";
 import { Heading } from "../../atoms/Heading/Heading";

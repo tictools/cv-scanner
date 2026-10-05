@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { extractSources } from "./extract-sources";
+import { extractScanCVSources } from "./scan-cv-sources";
 
-describe("extractSources", () => {
+describe("extractScanCVSources", () => {
   it("builds a SourceReference per candidate from scan-cv tool results", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       {
         toolName: "scan-cv",
         output: [
@@ -24,7 +24,7 @@ describe("extractSources", () => {
   });
 
   it("de-duplicates a candidate retrieved by two tool calls, keeping the higher score", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       {
         toolName: "scan-cv",
         output: [
@@ -57,7 +57,7 @@ describe("extractSources", () => {
   });
 
   it("orders sources by descending score", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       {
         toolName: "scan-cv",
         output: [
@@ -83,11 +83,11 @@ describe("extractSources", () => {
   });
 
   it("returns zero sources when no tool was called", () => {
-    expect(extractSources([])).toEqual([]);
+    expect(extractScanCVSources([])).toEqual([]);
   });
 
   it("returns zero sources when the tool result carries an error instead of results", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       { toolName: "scan-cv", output: { error: "vector store unreachable" } },
     ]);
 
@@ -95,7 +95,7 @@ describe("extractSources", () => {
   });
 
   it("ignores tool results from tools other than scan-cv", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       { toolName: "some-other-tool", output: [{ candidateId: "x", candidateName: "X", source: "x.pdf", content: "x", score: 1 }] },
     ]);
 
@@ -103,7 +103,7 @@ describe("extractSources", () => {
   });
 
   it("does not build a URL: source stays the repo-relative path as returned by the tool", () => {
-    const sources = extractSources([
+    const sources = extractScanCVSources([
       {
         toolName: "scan-cv",
         output: [

@@ -1,8 +1,9 @@
 import { retrieve } from "@rag/retrieval/retrieve";
 import { tool } from "ai";
 import { z } from "zod";
-import type { UpstashCredentials } from "@shared/env/upstash-credentials";
-import type { Maybe, PromiseOr } from "@shared/ts/typeUtils/aliases";
+import type { CreateScanCVToolOptions } from "../types/tools";
+
+export const SCAN_CV_TOOL_NAME = "scan-cv";
 
 export const DEFAULT_TOP_K = 5;
 export const MAX_TOP_K = 10;
@@ -18,12 +19,6 @@ export const ScanCVInputSchema = z.object({
     .optional()
     .describe(`Number of CVs to retrieve, ordered by relevance (default ${DEFAULT_TOP_K}, max ${MAX_TOP_K}).`),
 });
-
-export interface CreateScanCVToolOptions {
-  // Resolved inside `execute`, so missing credentials surface as a tool error rather than an
-  // exception thrown before the chat turn starts.
-  resolveCredentials?: Maybe<() => PromiseOr<UpstashCredentials>>;
-}
 
 export const createScanCVTool = ({ resolveCredentials }: CreateScanCVToolOptions) =>
   tool({

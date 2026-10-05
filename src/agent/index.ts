@@ -1,6 +1,6 @@
 import { routeAgentRequest } from "agents";
-import { ScannerAgent } from "./chat/scanner-agent";
-import type { Env } from "./env/agent-env";
+import { ScannerAgent } from "./worker/scanner-agent";
+import type { Env } from "./types/env";
 
 export { ScannerAgent };
 
